@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             TrainingSeeder::class,
             DonationSeeder::class,
             AssistanceRequestSeeder::class,
+            AlcoyResourcesSeeder::class,
         ]);
 
         User::factory()->create([

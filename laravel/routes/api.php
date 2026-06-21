@@ -92,3 +92,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/requests/submit', [AssistanceRequestController::class, 'submit']); // Submit a new request
     Route::get('/requests/my', [AssistanceRequestController::class, 'myRequests']);
 });
+
+// EMMA Data Layer — Ryu Mendoza (CS Data Layer, AAIH 2026)
+use App\Http\Controllers\Api\HouseholdController;
+use App\Http\Controllers\Api\ResourceController;
+use App\Http\Controllers\Api\SituationReportController;
+use App\Http\Controllers\Api\AgentLogController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/households/{familyId}/vulnerability', [HouseholdController::class, 'vulnerability']);
+    Route::get('/resources', [ResourceController::class, 'index']);
+    Route::post('/situation-reports', [SituationReportController::class, 'store']);
+    Route::post('/agent-logs', [AgentLogController::class, 'store']);
+});

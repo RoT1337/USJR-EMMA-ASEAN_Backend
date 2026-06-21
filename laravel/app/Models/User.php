@@ -36,6 +36,7 @@ protected $fillable = [
 
     // Special needs
     'specific_needs',
+    'is_pregnant',
 
     // Location and evacuation
     'preferred_evacuation_center_id',
@@ -75,6 +76,7 @@ protected $fillable = [
         'location_sharing_enabled' => 'boolean',
         'last_known_latitude' => 'decimal:16',
         'last_known_longitude' => 'decimal:16',
+        'is_pregnant' => 'boolean',
     ];
 
     protected function casts(): array

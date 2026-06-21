@@ -1,10 +1,11 @@
-"""agents package — exports all six LangGraph node functions."""
-from agents.handoff import handoff_coordinator
-from agents.intake import intake_agent
-from agents.pattern import pattern_agent
-from agents.resource import resource_agent
-from agents.routing import routing_agent
-from agents.vulnerability import vulnerability_agent
+"""agents subpackage — exports all six LangGraph agent node functions."""
+
+from .handoff import handoff_coordinator
+from .intake import intake_agent
+from .pattern import pattern_agent
+from .resource import resource_agent
+from .routing import routing_agent
+from .vulnerability import vulnerability_agent
 
 __all__ = [
     "intake_agent",

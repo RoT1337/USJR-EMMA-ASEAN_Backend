@@ -31,8 +31,8 @@ class TestIntakeAgent:
 
     async def test_returns_required_schema(self, sample_report, mock_claude_intake):
         """Intake output must contain every field defined in the API contract."""
-        with patch("agents.intake.get_claude_client", return_value=mock_claude_intake):
-            from agents.intake import intake_agent
+        with patch("agents.agents.intake.get_claude_client", return_value=mock_claude_intake):
+            from agents.agents.intake import intake_agent
             result = await intake_agent(sample_report)
 
         assert "intake" in result
@@ -45,23 +45,23 @@ class TestIntakeAgent:
 
     async def test_urgency_values_are_valid(self, sample_report, mock_claude_intake):
         """urgency must be one of the four defined levels."""
-        with patch("agents.intake.get_claude_client", return_value=mock_claude_intake):
-            from agents.intake import intake_agent
+        with patch("agents.agents.intake.get_claude_client", return_value=mock_claude_intake):
+            from agents.agents.intake import intake_agent
             result = await intake_agent(sample_report)
 
         assert result["intake"]["urgency"] in {"CRITICAL", "HIGH", "MEDIUM", "LOW"}
 
     async def test_confidence_is_clamped(self, sample_report):
         """Confidence > 1.0 returned by Claude must be clamped to 1.0."""
-        from tests.conftest import make_claude_mock
+        from agents.tests.conftest import make_claude_mock
         bad_response = {
             "language_detected": "Filipino", "location": "Alcoy, Cebu",
             "hazard_type": "flood", "population_affected": 100,
             "urgency": "HIGH", "key_flags": [], "confidence": 9.99,
         }
         mock_client = make_claude_mock(bad_response)
-        with patch("agents.intake.get_claude_client", return_value=mock_client):
-            from agents.intake import intake_agent
+        with patch("agents.agents.intake.get_claude_client", return_value=mock_client):
+            from agents.agents.intake import intake_agent
             result = await intake_agent(sample_report)
 
         assert result["intake"]["confidence"] <= 1.0
@@ -73,8 +73,8 @@ class TestIntakeAgent:
         mock_client = MagicMock()
         mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-        with patch("agents.intake.get_claude_client", return_value=mock_client):
-            from agents.intake import intake_agent
+        with patch("agents.agents.intake.get_claude_client", return_value=mock_client):
+            from agents.agents.intake import intake_agent
             result = await intake_agent(sample_report)
 
         assert "intake" in result
@@ -83,16 +83,16 @@ class TestIntakeAgent:
 
     async def test_key_flags_is_a_list(self, sample_report, mock_claude_intake):
         """key_flags must always be a list."""
-        with patch("agents.intake.get_claude_client", return_value=mock_claude_intake):
-            from agents.intake import intake_agent
+        with patch("agents.agents.intake.get_claude_client", return_value=mock_claude_intake):
+            from agents.agents.intake import intake_agent
             result = await intake_agent(sample_report)
 
         assert isinstance(result["intake"]["key_flags"], list)
 
     async def test_population_affected_is_numeric(self, sample_report, mock_claude_intake):
         """population_affected must be numeric."""
-        with patch("agents.intake.get_claude_client", return_value=mock_claude_intake):
-            from agents.intake import intake_agent
+        with patch("agents.agents.intake.get_claude_client", return_value=mock_claude_intake):
+            from agents.agents.intake import intake_agent
             result = await intake_agent(sample_report)
 
         assert isinstance(result["intake"]["population_affected"], (int, float))
@@ -107,10 +107,10 @@ class TestVulnerabilityAgent:
 
     async def test_returns_required_schema(self, full_state, mock_claude_vulnerability):
         """Vulnerability output must contain tier1, tier2, recommendation, confidence."""
-        with patch("agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
-             patch("agents.vulnerability.get_households_by_location", AsyncMock(return_value=[])), \
-             patch("agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})):
-            from agents.vulnerability import vulnerability_agent
+        with patch("agents.agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
+             patch("agents.agents.vulnerability.get_households_by_location", AsyncMock(return_value=[])), \
+             patch("agents.agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})):
+            from agents.agents.vulnerability import vulnerability_agent
             result = await vulnerability_agent(full_state)
 
         assert "vulnerability" in result
@@ -120,20 +120,20 @@ class TestVulnerabilityAgent:
     async def test_calls_laravel_with_location_and_lgu(self, full_state, mock_claude_vulnerability):
         """Agent must call get_households_by_location with location and lgu_id from state."""
         mock_get_households = AsyncMock(return_value=[])
-        with patch("agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
-             patch("agents.vulnerability.get_households_by_location", mock_get_households), \
-             patch("agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})):
-            from agents.vulnerability import vulnerability_agent
+        with patch("agents.agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
+             patch("agents.agents.vulnerability.get_households_by_location", mock_get_households), \
+             patch("agents.agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})):
+            from agents.agents.vulnerability import vulnerability_agent
             await vulnerability_agent(full_state)
 
         mock_get_households.assert_called_once_with("Alcoy, Cebu", "cebu-alcoy")
 
     async def test_tier1_and_tier2_are_lists(self, full_state, mock_claude_vulnerability):
         """tier1 and tier2 must always be lists."""
-        with patch("agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
-             patch("agents.vulnerability.get_households_by_location", AsyncMock(return_value=[])), \
-             patch("agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})):
-            from agents.vulnerability import vulnerability_agent
+        with patch("agents.agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
+             patch("agents.agents.vulnerability.get_households_by_location", AsyncMock(return_value=[])), \
+             patch("agents.agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})):
+            from agents.agents.vulnerability import vulnerability_agent
             result = await vulnerability_agent(full_state)
 
         assert isinstance(result["vulnerability"]["tier1"], list)
@@ -141,10 +141,10 @@ class TestVulnerabilityAgent:
 
     async def test_handles_laravel_unavailable(self, full_state, mock_claude_vulnerability):
         """Agent must continue and return a result even if Laravel is down."""
-        with patch("agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
-             patch("agents.vulnerability.get_households_by_location",
+        with patch("agents.agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
+             patch("agents.agents.vulnerability.get_households_by_location",
                    AsyncMock(side_effect=Exception("Connection refused"))):
-            from agents.vulnerability import vulnerability_agent
+            from agents.agents.vulnerability import vulnerability_agent
             result = await vulnerability_agent(full_state)
 
         assert "vulnerability" in result
@@ -160,9 +160,9 @@ class TestResourceAgent:
 
     async def test_returns_required_schema(self, full_state, mock_claude_resource):
         """Resource output must contain gaps, available, recommendation, confidence."""
-        with patch("agents.resource.get_claude_client", return_value=mock_claude_resource), \
-             patch("agents.resource.get_resources", AsyncMock(return_value={})):
-            from agents.resource import resource_agent
+        with patch("agents.agents.resource.get_claude_client", return_value=mock_claude_resource), \
+             patch("agents.agents.resource.get_resources", AsyncMock(return_value={})):
+            from agents.agents.resource import resource_agent
             result = await resource_agent(full_state)
 
         assert "resource" in result
@@ -172,18 +172,18 @@ class TestResourceAgent:
     async def test_calls_laravel_resources_with_lgu_id(self, full_state, mock_claude_resource):
         """Agent must call get_resources with the correct lgu_id."""
         mock_get_resources = AsyncMock(return_value={})
-        with patch("agents.resource.get_claude_client", return_value=mock_claude_resource), \
-             patch("agents.resource.get_resources", mock_get_resources):
-            from agents.resource import resource_agent
+        with patch("agents.agents.resource.get_claude_client", return_value=mock_claude_resource), \
+             patch("agents.agents.resource.get_resources", mock_get_resources):
+            from agents.agents.resource import resource_agent
             await resource_agent(full_state)
 
         mock_get_resources.assert_called_once_with("cebu-alcoy")
 
     async def test_gaps_and_available_are_lists(self, full_state, mock_claude_resource):
         """gaps and available must always be lists."""
-        with patch("agents.resource.get_claude_client", return_value=mock_claude_resource), \
-             patch("agents.resource.get_resources", AsyncMock(return_value={})):
-            from agents.resource import resource_agent
+        with patch("agents.agents.resource.get_claude_client", return_value=mock_claude_resource), \
+             patch("agents.agents.resource.get_resources", AsyncMock(return_value={})):
+            from agents.agents.resource import resource_agent
             result = await resource_agent(full_state)
 
         assert isinstance(result["resource"]["gaps"], list)
@@ -191,10 +191,10 @@ class TestResourceAgent:
 
     async def test_handles_laravel_unavailable(self, full_state, mock_claude_resource):
         """Agent must return a result with default gaps if Laravel is down."""
-        with patch("agents.resource.get_claude_client", return_value=mock_claude_resource), \
-             patch("agents.resource.get_resources",
+        with patch("agents.agents.resource.get_claude_client", return_value=mock_claude_resource), \
+             patch("agents.agents.resource.get_resources",
                    AsyncMock(side_effect=Exception("Timeout"))):
-            from agents.resource import resource_agent
+            from agents.agents.resource import resource_agent
             result = await resource_agent(full_state)
 
         assert "resource" in result
@@ -209,9 +209,9 @@ class TestRoutingAgent:
 
     async def test_returns_required_schema(self, full_state, mock_claude_routing):
         """Routing output must contain all five required fields."""
-        with patch("agents.routing.get_claude_client", return_value=mock_claude_routing), \
-             patch("agents.routing.get_nearest_evacuation_centers", AsyncMock(return_value=[])):
-            from agents.routing import routing_agent
+        with patch("agents.agents.routing.get_claude_client", return_value=mock_claude_routing), \
+             patch("agents.agents.routing.get_nearest_evacuation_centers", AsyncMock(return_value=[])):
+            from agents.agents.routing import routing_agent
             result = await routing_agent(full_state)
 
         assert "routing" in result
@@ -222,18 +222,18 @@ class TestRoutingAgent:
 
     async def test_risk_is_valid_level(self, full_state, mock_claude_routing):
         """risk must be HIGH, MODERATE, or LOW."""
-        with patch("agents.routing.get_claude_client", return_value=mock_claude_routing), \
-             patch("agents.routing.get_nearest_evacuation_centers", AsyncMock(return_value=[])):
-            from agents.routing import routing_agent
+        with patch("agents.agents.routing.get_claude_client", return_value=mock_claude_routing), \
+             patch("agents.agents.routing.get_nearest_evacuation_centers", AsyncMock(return_value=[])):
+            from agents.agents.routing import routing_agent
             result = await routing_agent(full_state)
 
         assert result["routing"]["risk"] in {"HIGH", "MODERATE", "LOW"}
 
     async def test_eta_minutes_is_numeric(self, full_state, mock_claude_routing):
         """eta_minutes must be numeric."""
-        with patch("agents.routing.get_claude_client", return_value=mock_claude_routing), \
-             patch("agents.routing.get_nearest_evacuation_centers", AsyncMock(return_value=[])):
-            from agents.routing import routing_agent
+        with patch("agents.agents.routing.get_claude_client", return_value=mock_claude_routing), \
+             patch("agents.agents.routing.get_nearest_evacuation_centers", AsyncMock(return_value=[])):
+            from agents.agents.routing import routing_agent
             result = await routing_agent(full_state)
 
         assert isinstance(result["routing"]["eta_minutes"], (int, float))
@@ -246,9 +246,9 @@ class TestRoutingAgent:
             "intake": {**full_state["intake"], "location": "10.2333, 123.7167"},
         }
         mock_ev = AsyncMock(return_value=[])
-        with patch("agents.routing.get_claude_client", return_value=mock_claude_routing), \
-             patch("agents.routing.get_nearest_evacuation_centers", mock_ev):
-            from agents.routing import routing_agent
+        with patch("agents.agents.routing.get_claude_client", return_value=mock_claude_routing), \
+             patch("agents.agents.routing.get_nearest_evacuation_centers", mock_ev):
+            from agents.agents.routing import routing_agent
             await routing_agent(state_with_coords)
 
         mock_ev.assert_called_once()
@@ -259,10 +259,10 @@ class TestRoutingAgent:
             **full_state,
             "intake": {**full_state["intake"], "location": "10.2333, 123.7167"},
         }
-        with patch("agents.routing.get_claude_client", return_value=mock_claude_routing), \
-             patch("agents.routing.get_nearest_evacuation_centers",
+        with patch("agents.agents.routing.get_claude_client", return_value=mock_claude_routing), \
+             patch("agents.agents.routing.get_nearest_evacuation_centers",
                    AsyncMock(side_effect=Exception("503"))):
-            from agents.routing import routing_agent
+            from agents.agents.routing import routing_agent
             result = await routing_agent(state_with_coords)
 
         assert "routing" in result
@@ -281,9 +281,9 @@ class TestPatternAgent:
             {"event_name": "Typhoon Odette", "location": "Cebu", "hazard_type": "typhoon",
              "outcome": "Flood peaked 4 hrs after report.", "cross_border_note": "None"}
         ]
-        with patch("agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
-             patch("agents.pattern.search_prior_events", AsyncMock(return_value=prior_events)):
-            from agents.pattern import pattern_agent
+        with patch("agents.agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
+             patch("agents.agents.pattern.search_prior_events", AsyncMock(return_value=prior_events)):
+            from agents.agents.pattern import pattern_agent
             result = await pattern_agent(full_state)
 
         assert "pattern" in result
@@ -293,28 +293,28 @@ class TestPatternAgent:
     async def test_calls_qdrant_with_hazard_and_location(self, full_state, mock_claude_pattern):
         """Agent must query Qdrant using hazard_type and location from intake."""
         mock_search = AsyncMock(return_value=[])
-        with patch("agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
-             patch("agents.pattern.search_prior_events", mock_search):
-            from agents.pattern import pattern_agent
+        with patch("agents.agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
+             patch("agents.agents.pattern.search_prior_events", mock_search):
+            from agents.agents.pattern import pattern_agent
             await pattern_agent(full_state)
 
         mock_search.assert_called_once_with("flood", "Alcoy, Cebu", top_k=3)
 
     async def test_handles_qdrant_unavailable(self, full_state, mock_claude_pattern):
         """Agent must return a result with reduced confidence if Qdrant is down."""
-        with patch("agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
-             patch("agents.pattern.search_prior_events",
+        with patch("agents.agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
+             patch("agents.agents.pattern.search_prior_events",
                    AsyncMock(side_effect=Exception("Connection refused"))):
-            from agents.pattern import pattern_agent
+            from agents.agents.pattern import pattern_agent
             result = await pattern_agent(full_state)
 
         assert "pattern" in result
 
     async def test_handles_no_prior_events(self, full_state, mock_claude_pattern):
         """Agent must still return a valid result when Qdrant returns zero matches."""
-        with patch("agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
-             patch("agents.pattern.search_prior_events", AsyncMock(return_value=[])):
-            from agents.pattern import pattern_agent
+        with patch("agents.agents.pattern.get_claude_client", return_value=mock_claude_pattern), \
+             patch("agents.agents.pattern.search_prior_events", AsyncMock(return_value=[])):
+            from agents.agents.pattern import pattern_agent
             result = await pattern_agent(full_state)
 
         assert "pattern" in result
@@ -329,8 +329,8 @@ class TestHandoffCoordinator:
 
     async def test_returns_required_schema(self, full_state, mock_claude_handoff):
         """Handoff output must contain action, reasoning, confidence."""
-        with patch("agents.handoff.get_claude_client", return_value=mock_claude_handoff):
-            from agents.handoff import handoff_coordinator
+        with patch("agents.agents.handoff.get_claude_client", return_value=mock_claude_handoff):
+            from agents.agents.handoff import handoff_coordinator
             result = await handoff_coordinator(full_state)
 
         assert "handoff" in result
@@ -339,8 +339,8 @@ class TestHandoffCoordinator:
 
     async def test_confidence_range(self, full_state, mock_claude_handoff):
         """Confidence must be within [0.0, 1.0]."""
-        with patch("agents.handoff.get_claude_client", return_value=mock_claude_handoff):
-            from agents.handoff import handoff_coordinator
+        with patch("agents.agents.handoff.get_claude_client", return_value=mock_claude_handoff):
+            from agents.agents.handoff import handoff_coordinator
             result = await handoff_coordinator(full_state)
 
         conf = result["handoff"]["confidence"]
@@ -348,8 +348,8 @@ class TestHandoffCoordinator:
 
     async def test_action_is_non_empty_string(self, full_state, mock_claude_handoff):
         """action must be a non-empty string."""
-        with patch("agents.handoff.get_claude_client", return_value=mock_claude_handoff):
-            from agents.handoff import handoff_coordinator
+        with patch("agents.agents.handoff.get_claude_client", return_value=mock_claude_handoff):
+            from agents.agents.handoff import handoff_coordinator
             result = await handoff_coordinator(full_state)
 
         assert isinstance(result["handoff"]["action"], str)
@@ -369,8 +369,8 @@ class TestHandoffCoordinator:
             "pattern": None,
             "handoff": None,
         }
-        with patch("agents.handoff.get_claude_client", return_value=mock_claude_handoff):
-            from agents.handoff import handoff_coordinator
+        with patch("agents.agents.handoff.get_claude_client", return_value=mock_claude_handoff):
+            from agents.agents.handoff import handoff_coordinator
             result = await handoff_coordinator(partial_state)
 
         assert "handoff" in result
@@ -382,8 +382,8 @@ class TestHandoffCoordinator:
         mock_client = MagicMock()
         mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-        with patch("agents.handoff.get_claude_client", return_value=mock_client):
-            from agents.handoff import handoff_coordinator
+        with patch("agents.agents.handoff.get_claude_client", return_value=mock_client):
+            from agents.agents.handoff import handoff_coordinator
             result = await handoff_coordinator(full_state)
 
         assert "handoff" in result
@@ -397,46 +397,46 @@ class TestHandoffCoordinator:
 class TestHelpers:
     """Tests for utils/helpers.py"""
 
-    def test_parse_plain_json(self):
+    async def test_parse_plain_json(self):
         from utils.helpers import parse_llm_json
         result = parse_llm_json('{"key": "value"}')
         assert result == {"key": "value"}
 
-    def test_parse_json_with_fence(self):
+    async def test_parse_json_with_fence(self):
         from utils.helpers import parse_llm_json
         fenced = '```json\n{"key": "value"}\n```'
         result = parse_llm_json(fenced)
         assert result == {"key": "value"}
 
-    def test_parse_json_with_bare_fence(self):
+    async def test_parse_json_with_bare_fence(self):
         from utils.helpers import parse_llm_json
         fenced = '```\n{"key": "value"}\n```'
         result = parse_llm_json(fenced)
         assert result == {"key": "value"}
 
-    def test_raises_on_invalid_json(self):
+    async def test_raises_on_invalid_json(self):
         from utils.helpers import parse_llm_json
         with pytest.raises(json.JSONDecodeError):
             parse_llm_json("not json at all")
 
-    def test_raises_on_non_dict_json(self):
+    async def test_raises_on_non_dict_json(self):
         from utils.helpers import parse_llm_json
         with pytest.raises(ValueError):
             parse_llm_json("[1, 2, 3]")
 
-    def test_clamp_confidence_normal(self):
+    async def test_clamp_confidence_normal(self):
         from utils.helpers import clamp_confidence
         assert clamp_confidence(0.85) == pytest.approx(0.85)
 
-    def test_clamp_confidence_above_1(self):
+    async def test_clamp_confidence_above_1(self):
         from utils.helpers import clamp_confidence
         assert clamp_confidence(9.5) == 1.0
 
-    def test_clamp_confidence_below_0(self):
+    async def test_clamp_confidence_below_0(self):
         from utils.helpers import clamp_confidence
         assert clamp_confidence(-0.5) == 0.0
 
-    def test_clamp_confidence_non_numeric(self):
+    async def test_clamp_confidence_non_numeric(self):
         from utils.helpers import clamp_confidence
         assert clamp_confidence("high") == 0.0
 

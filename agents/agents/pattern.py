@@ -6,9 +6,9 @@ surfaces patterns and cross-border relevance via Claude Haiku 4.5.
 """
 import json
 
-from utils.claude import MODEL, get_claude_client
-from utils.helpers import clamp_confidence, get_logger, parse_llm_json
-from utils.qdrant import search_prior_events
+from ..utils.claude import MODEL, get_claude_client
+from ..utils.helpers import clamp_confidence, get_logger, parse_llm_json
+from ..utils.qdrant import search_prior_events
 
 logger = get_logger(__name__)
 

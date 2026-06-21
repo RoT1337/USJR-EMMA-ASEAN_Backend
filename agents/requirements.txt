@@ -7,3 +7,4 @@ qdrant-client
 httpx
 python-dotenv
 pydantic
+pytest-asyncio

@@ -1,17 +1,102 @@
 @import "tailwindcss";
 
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --ground:     #F0F4F8;
+  --surface:    #FFFFFF;
+  --raised:     #F8FAFC;
+  --rim:        #DDE4ED;
+  --rim-soft:   #EDF1F6;
+  --muted:      #8FA3BA;
+  --text:       #0F1C2E;
+  --text-dim:   #4E6A84;
+  --alert:      #EA580C;
+  --alert-bg:   #FFF4EE;
+  --alert-dim:  rgba(234, 88, 12, 0.1);
+  --active:     #0284C7;
+  --pass:       #059669;
+  --pass-bg:    #ECFDF5;
+  --fail:       #DC2626;
+  --fail-bg:    #FEF2F2;
+  --amber:      #D97706;
+  --amber-bg:   #FFFBEB;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f1f5f9;
-  color: #1e293b;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--ground);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  min-height: 100svh;
+#root { min-height: 100svh; display: flex; flex-direction: column; }
+
+/* ── Form controls ─────────────────────────────────────────── */
+.ops-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--rim);
+  border-radius: 7px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ops-input:focus {
+  border-color: var(--alert);
+  box-shadow: 0 0 0 3px var(--alert-dim);
+}
+.ops-input::placeholder { color: var(--muted); }
+
+.ops-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238FA3BA' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  cursor: pointer;
 }
 
-@keyframes fadeIn {
+/* ── Agent card accent colors ──────────────────────────────── */
+.agent-intake        { --card-accent: #0284C7; --card-bg: #F0F7FF; }
+.agent-vulnerability { --card-accent: #D97706; --card-bg: #FFFBEB; }
+.agent-resource      { --card-accent: #7C3AED; --card-bg: #F5F3FF; }
+.agent-routing       { --card-accent: #059669; --card-bg: #ECFDF5; }
+.agent-pattern       { --card-accent: #EA580C; --card-bg: #FFF4EE; }
+.agent-handoff       { --card-accent: #DC2626; --card-bg: #FEF2F2; }
+
+/* ── Confidence bar ────────────────────────────────────────── */
+.conf-bar-track {
+  height: 3px;
+  background: var(--rim);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 7px;
+}
+.conf-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--card-accent);
+  transition: width 0.7s ease;
+}
+
+/* ── Animations ────────────────────────────────────────────── */
+@keyframes fadeSlide {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

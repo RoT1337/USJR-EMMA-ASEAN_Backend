@@ -5,16 +5,24 @@ const AGENTS = ['intake', 'vulnerability', 'resource', 'routing', 'pattern', 'ha
 export default function AgentPipeline({ outputs }) {
   return (
     <div>
-      <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
+      <div style={{
+        fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color: 'var(--muted)',
+        marginBottom: 12,
+      }}>
         Agent Pipeline
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+        gap: 10,
+      }}>
         {AGENTS.map((key, i) => (
           <AgentCard
             key={key}
             agentKey={key}
             data={outputs?.[key] ?? null}
-            animationDelay={i * 120}
+            animationDelay={i * 100}
           />
         ))}
       </div>

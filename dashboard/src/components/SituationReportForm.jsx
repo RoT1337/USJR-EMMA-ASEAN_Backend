@@ -1,10 +1,25 @@
 const LANGUAGES = [
-  { value: 'filipino', label: 'Filipino' },
-  { value: 'bahasa',   label: 'Bahasa Indonesia' },
+  { value: 'filipino',   label: 'Filipino' },
+  { value: 'bahasa',     label: 'Bahasa Indonesia' },
   { value: 'vietnamese', label: 'Vietnamese' },
-  { value: 'thai',     label: 'Thai' },
-  { value: 'english',  label: 'English' },
+  { value: 'thai',       label: 'Thai' },
+  { value: 'english',    label: 'English' },
 ]
+
+function Label({ children }) {
+  return (
+    <div style={{
+      fontSize: 10,
+      fontWeight: 600,
+      letterSpacing: '0.09em',
+      textTransform: 'uppercase',
+      color: 'var(--text-dim)',
+      marginBottom: 5,
+    }}>
+      {children}
+    </div>
+  )
+}
 
 export default function SituationReportForm({ onSubmit, isLoading }) {
   function handleSubmit(e) {
@@ -19,39 +34,20 @@ export default function SituationReportForm({ onSubmit, isLoading }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">
-            LGU / Location ID
-          </label>
-          <input
-            name="lgu_id"
-            type="text"
-            defaultValue="cebu-city-lgu"
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex-1">
-          <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">
-            Operator ID
-          </label>
-          <input
-            name="submitted_by"
-            type="text"
-            defaultValue="operator-1"
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div>
+        <Label>LGU / Location</Label>
+        <input name="lgu_id" type="text" defaultValue="cebu-city-lgu" className="ops-input" />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div>
+          <Label>Operator ID</Label>
+          <input name="submitted_by" type="text" defaultValue="operator-1" className="ops-input" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">
-            Language
-          </label>
-          <select
-            name="language"
-            defaultValue="english"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+          <Label>Language</Label>
+          <select name="language" defaultValue="english" className="ops-input ops-select">
             {LANGUAGES.map(l => (
               <option key={l.value} value={l.value}>{l.label}</option>
             ))}
@@ -60,24 +56,36 @@ export default function SituationReportForm({ onSubmit, isLoading }) {
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">
-          Situation Report
-        </label>
+        <Label>Situation Report</Label>
         <textarea
           name="report_text"
           required
-          rows={5}
-          placeholder="Describe the emergency situation… e.g. 'Typhoon Egay made landfall in Cebu City. Estimated 2,000 families in Barangay Inayawan are affected. Roads to evacuation centers are flooded.'"
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={9}
+          placeholder="Describe the emergency — location, hazard type, affected population, road conditions, known obstacles…"
+          className="ops-input"
+          style={{ resize: 'none', lineHeight: 1.65 }}
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-2.5 text-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
+        style={{
+          width: '100%',
+          padding: '11px 0',
+          background: isLoading ? 'var(--rim)' : 'var(--alert)',
+          color: isLoading ? 'var(--muted)' : '#fff',
+          border: 'none',
+          borderRadius: 7,
+          fontSize: 13,
+          fontWeight: 600,
+          fontFamily: "'Space Grotesk', sans-serif",
+          letterSpacing: '0.02em',
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          transition: 'opacity 0.15s',
+        }}
       >
-        {isLoading ? 'Processing…' : 'Submit Situation Report'}
+        {isLoading ? 'Processing…' : 'Submit Situation Report →'}
       </button>
     </form>
   )

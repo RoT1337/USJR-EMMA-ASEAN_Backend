@@ -137,23 +137,33 @@ body {
   }
 }
 
-/* Mobile: stack vertically, sidebar goes on top */
+/* Mobile: let the whole page scroll, no internal scroll traps */
 @media (max-width: 640px) {
+  /* The outer app wrapper must scroll, not clip */
+  #root, .emma-root {
+    min-height: 100svh;
+    height: auto;
+    overflow-y: auto;
+  }
+
   .emma-body {
     flex-direction: column;
-    overflow: visible;
-    overflow-y: auto;
+    overflow: unset;
+    height: auto;
+    flex: none;
   }
 
   .emma-sidebar {
     width: 100%;
+    height: auto;
+    overflow-y: visible;
     border-right: none;
     border-bottom: 1px solid var(--rim);
-    overflow-y: visible;
     padding: 16px;
   }
 
   .emma-main {
+    height: auto;
     overflow-y: visible;
     padding: 16px;
   }

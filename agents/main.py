@@ -11,15 +11,19 @@ Run with:
 """
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from graph import run_pipeline
-from utils.claude import MODEL
-from utils.helpers import get_logger
+from agents.graph import run_pipeline
+from agents.utils.claude import MODEL
+from agents.utils.helpers import get_logger
 
 logger = get_logger("emma.main")
 

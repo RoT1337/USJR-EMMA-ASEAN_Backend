@@ -82,7 +82,7 @@ function App() {
   const showGate     = state.phase === 'awaiting_decision' || state.phase === 'logging'
 
   return (
-    <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--ground)' }}>
+    <div className="emma-root" style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--ground)' }}>
 
       {/* ── Header ───────────────────────────────────────────── */}
       <header style={{

@@ -85,64 +85,28 @@ function App() {
     <div className="emma-root" style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--ground)' }}>
 
       {/* ── Header ───────────────────────────────────────────── */}
-      <header style={{
-        background: 'var(--surface)',
-        borderBottom: '1px solid var(--rim)',
-        padding: '0 24px',
-        height: 56,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 700,
-                fontSize: 18,
-                color: 'var(--alert)',
-                letterSpacing: '-0.02em',
-              }}>
-                EMMA
-              </span>
-              <span style={{ color: 'var(--rim)', fontSize: 14 }}>|</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-dim)' }}>
-                DRRMO Operator Dashboard
-              </span>
-            </div>
-            <div className="emma-header-subtitle">
-              Emergency Management &amp; Monitoring Assistants · AAIH 2026
-            </div>
+      <header className="emma-header">
+        <div className="emma-header-left">
+          <div className="emma-header-brand">
+            <span className="emma-logo">EMMA</span>
+            <span className="emma-header-pipe">|</span>
+            <span className="emma-header-title">DRRMO Operator Dashboard</span>
           </div>
-          <div className="emma-header-sep" />
+          <div className="emma-header-subtitle">
+            Emergency Management &amp; Monitoring Assistants · AAIH 2026
+          </div>
+        </div>
+
+        <div className="emma-header-center">
           <HealthBanner health={health} error={healthError} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="emma-header-right">
           {state.reportId && (
-            <span style={{
-              fontSize: 11, color: 'var(--muted)',
-              fontFamily: "'JetBrains Mono', monospace",
-            }}>
-              {state.reportId}
-            </span>
+            <span className="emma-report-id">{state.reportId.slice(0, 8)}…</span>
           )}
           {state.phase !== 'idle' && (
-            <button
-              onClick={reset}
-              style={{
-                fontSize: 12, fontWeight: 500,
-                color: 'var(--text-dim)',
-                background: 'var(--ground)',
-                border: '1px solid var(--rim)',
-                borderRadius: 6,
-                padding: '5px 12px',
-                cursor: 'pointer',
-                fontFamily: "'Inter', sans-serif",
-              }}
-            >
+            <button className="emma-new-report-btn" onClick={reset}>
               New Report
             </button>
           )}

@@ -60,9 +60,9 @@ export default function SituationReportForm({ onSubmit, isLoading }) {
         <textarea
           name="report_text"
           required
-          rows={9}
+          rows={6}
           placeholder="Describe the emergency — location, hazard type, affected population, road conditions, known obstacles…"
-          className="ops-input"
+          className="ops-input ops-report-textarea"
           style={{ resize: 'none', lineHeight: 1.65 }}
         />
       </div>

@@ -12,7 +12,7 @@ export default function AgentPipeline({ outputs }) {
       }}>
         Agent Pipeline
       </div>
-      <div style={{
+      <div className="emma-pipeline-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
         gap: 10,

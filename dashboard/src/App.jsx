@@ -3,6 +3,7 @@ import { checkHealth, createSituationReport, processReport, logDecision } from '
 import HealthBanner from './components/HealthBanner'
 import SituationReportForm from './components/SituationReportForm'
 import AgentPipeline from './components/AgentPipeline'
+import AgentNav from './components/AgentNav'
 import HumanGate from './components/HumanGate'
 
 const INITIAL = { phase: 'idle', reportId: null, agentOutputs: null, error: null }
@@ -80,14 +81,14 @@ function App() {
     setLastReportText('')
   }
 
-  const isLoading   = state.phase === 'submitting' || state.phase === 'processing'
+  const isLoading    = state.phase === 'submitting' || state.phase === 'processing'
   const showPipeline = ['submitting', 'processing', 'awaiting_decision', 'logging', 'done'].includes(state.phase)
   const showGate     = state.phase === 'awaiting_decision' || state.phase === 'logging'
 
   return (
     <div className="app-root">
 
-      {/* ── Header ─────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────── */}
       <header className="app-header">
         <div className="app-header-left">
           <div className="app-brand">
@@ -112,7 +113,7 @@ function App() {
         </div>
       </header>
 
-      {/* ── Status/Error strip ──────────────────────────── */}
+      {/* ── Status strips ───────────────────────────────────── */}
       {state.phase === 'submitting' && (
         <div className="app-strip">
           <span className="strip-dot" />
@@ -131,14 +132,12 @@ function App() {
           Logging operator decision to audit trail…
         </div>
       )}
-
       {state.phase === 'error' && (
         <div className="app-strip app-strip-error">
           <strong>Error:</strong> {state.error}
           <button onClick={reset} className="strip-link">Try again</button>
         </div>
       )}
-
       {state.phase === 'done' && decisionResult && (
         <div className="app-strip app-strip-done">
           <strong>Decision logged —</strong>
@@ -148,47 +147,12 @@ function App() {
         </div>
       )}
 
-      {/* ── Main content ────────────────────────────────── */}
-      <div className="app-body">
-
-        {/* Form section (always visible when idle) */}
-        {!showPipeline && (
+      {/* ── Idle layout: form + empty state ─────────────────── */}
+      {!showPipeline && (
+        <div className="app-body">
           <div className="app-form-section">
             <SituationReportForm onSubmit={handleSubmit} isLoading={isLoading} />
           </div>
-        )}
-
-        {/* Pipeline output */}
-        {showPipeline && (
-          <div className="app-output">
-            {/* Collapsible sitrep */}
-            {lastReportText && (
-              <div className="app-sitrep-pin">
-                <button className="doc-sitrep-toggle" onClick={() => setShowSitrep(!showSitrep)}>
-                  <span className="doc-sitrep-label">Situation Report</span>
-                  <span className="doc-sitrep-id">{state.reportId}</span>
-                  <span className="doc-sitrep-chevron">{showSitrep ? '▼' : '▶'}</span>
-                </button>
-                {showSitrep && (
-                  <p className="doc-sitrep-text">{lastReportText}</p>
-                )}
-              </div>
-            )}
-
-            <AgentPipeline outputs={state.agentOutputs} isProcessing={state.phase === 'processing'} />
-
-            {showGate && state.agentOutputs?.handoff && (
-              <HumanGate
-                handoff={state.agentOutputs.handoff}
-                onDecide={handleDecide}
-                isLogging={state.phase === 'logging'}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!showPipeline && (
           <div className="app-empty">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="app-empty-icon">
               <circle cx="12" cy="12" r="10" />
@@ -201,8 +165,43 @@ function App() {
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* ── Doc layout: agent nav + pipeline ────────────────── */}
+      {showPipeline && (
+        <div className="app-body-doc">
+          <AgentNav outputs={state.agentOutputs} />
+
+          <main className="doc-main">
+            {lastReportText && (
+              <div className="doc-sitrep">
+                <button className="doc-sitrep-toggle" onClick={() => setShowSitrep(!showSitrep)}>
+                  <span className="doc-sitrep-label">Situation Report</span>
+                  <span className="doc-sitrep-id">{state.reportId}</span>
+                  <span className="doc-sitrep-chevron">{showSitrep ? '▼' : '▶'}</span>
+                </button>
+                {showSitrep && (
+                  <p className="doc-sitrep-text">{lastReportText}</p>
+                )}
+              </div>
+            )}
+
+            <AgentPipeline
+              outputs={state.agentOutputs}
+              isProcessing={state.phase === 'processing' || state.phase === 'submitting'}
+            />
+
+            {showGate && state.agentOutputs?.handoff && (
+              <HumanGate
+                handoff={state.agentOutputs.handoff}
+                onDecide={handleDecide}
+                isLogging={state.phase === 'logging'}
+              />
+            )}
+          </main>
+        </div>
+      )}
     </div>
   )
 }

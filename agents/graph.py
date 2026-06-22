@@ -23,7 +23,7 @@ from agents.agents.pattern import pattern_agent
 from agents.agents.resource import resource_agent
 from agents.agents.routing import routing_agent
 from agents.agents.vulnerability import vulnerability_agent
-from utils.helpers import get_logger
+from .utils.helpers import get_logger
 
 logger = get_logger("emma.graph")
 

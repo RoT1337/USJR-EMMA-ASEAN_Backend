@@ -5,7 +5,6 @@ import SituationReportForm from './components/SituationReportForm'
 import AgentPipeline from './components/AgentPipeline'
 import HumanGate from './components/HumanGate'
 
-// Phases: idle | submitting | processing | awaiting_decision | logging | done | error
 const INITIAL = { phase: 'idle', reportId: null, agentOutputs: null, error: null }
 
 function App() {
@@ -13,6 +12,8 @@ function App() {
   const [healthError, setHealthError] = useState(false)
   const [state, setState] = useState(INITIAL)
   const [decisionResult, setDecisionResult] = useState(null)
+  const [lastReportText, setLastReportText] = useState('')
+  const [showSitrep, setShowSitrep] = useState(true)
 
   useEffect(() => {
     checkHealth()
@@ -21,6 +22,7 @@ function App() {
   }, [])
 
   async function handleSubmit(form) {
+    setLastReportText(form.report_text)
     setState({ phase: 'submitting', reportId: null, agentOutputs: null, error: null })
     try {
       const now = new Date().toISOString()
@@ -75,142 +77,131 @@ function App() {
   function reset() {
     setState(INITIAL)
     setDecisionResult(null)
+    setLastReportText('')
   }
 
   const isLoading   = state.phase === 'submitting' || state.phase === 'processing'
-  const showPipeline = ['processing', 'awaiting_decision', 'logging', 'done'].includes(state.phase)
+  const showPipeline = ['submitting', 'processing', 'awaiting_decision', 'logging', 'done'].includes(state.phase)
   const showGate     = state.phase === 'awaiting_decision' || state.phase === 'logging'
 
   return (
-    <div className="emma-root" style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--ground)' }}>
+    <div className="app-root">
 
-      {/* ── Header ───────────────────────────────────────────── */}
-      <header className="emma-header">
-        <div className="emma-header-left">
-          <div className="emma-header-brand">
-            <span className="emma-logo">EMMA</span>
-            <span className="emma-header-pipe">|</span>
-            <span className="emma-header-title">DRRMO Operator Dashboard</span>
+      {/* ── Header ─────────────────────────────────────── */}
+      <header className="app-header">
+        <div className="app-header-left">
+          <div className="app-brand">
+            <span className="app-logo">EMMA</span>
+            <span className="app-pipe">|</span>
+            <span className="app-title">DRRMO Operator Dashboard</span>
           </div>
-          <div className="emma-header-subtitle">
-            Emergency Management &amp; Monitoring Assistants · AAIH 2026
-          </div>
+          <div className="app-subtitle">Emergency Management &amp; Monitoring Assistants · AAIH 2026</div>
         </div>
 
-        <div className="emma-header-center">
+        <div className="app-header-center">
           <HealthBanner health={health} error={healthError} />
         </div>
 
-        <div className="emma-header-right">
+        <div className="app-header-right">
           {state.reportId && (
-            <span className="emma-report-id">{state.reportId.slice(0, 8)}…</span>
+            <span className="app-report-id">{state.reportId}</span>
           )}
           {state.phase !== 'idle' && (
-            <button className="emma-new-report-btn" onClick={reset}>
-              New Report
-            </button>
+            <button className="app-new-btn" onClick={reset}>New Report</button>
           )}
         </div>
       </header>
 
-      {/* ── Status strip ─────────────────────────────────────── */}
-      {(state.phase === 'submitting' || state.phase === 'processing' || state.phase === 'logging') && (
-        <div className="emma-status-strip">
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--alert)', animation: 'blink 1s ease infinite', flexShrink: 0 }} />
-          {state.phase === 'submitting' && 'Registering report with Laravel…'}
-          {state.phase === 'processing' && `Running 5-agent pipeline…`}
-          {state.phase === 'logging'    && 'Logging operator decision to audit trail…'}
+      {/* ── Status/Error strip ──────────────────────────── */}
+      {state.phase === 'submitting' && (
+        <div className="app-strip">
+          <span className="strip-dot" />
+          Registering report with Laravel…
+        </div>
+      )}
+      {state.phase === 'processing' && (
+        <div className="app-strip">
+          <span className="strip-dot" />
+          Running 5-agent pipeline…
+        </div>
+      )}
+      {state.phase === 'logging' && (
+        <div className="app-strip">
+          <span className="strip-dot" />
+          Logging operator decision to audit trail…
         </div>
       )}
 
       {state.phase === 'error' && (
-        <div style={{
-          background: 'var(--fail-bg)', borderBottom: '1px solid #FECACA',
-          padding: '7px 24px', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 12, color: 'var(--fail)',
-        }}>
+        <div className="app-strip app-strip-error">
           <strong>Error:</strong> {state.error}
-          <button onClick={reset} style={{ marginLeft: 8, textDecoration: 'underline', background: 'none', border: 'none', color: 'var(--fail)', cursor: 'pointer', fontSize: 12 }}>
-            Try again
-          </button>
+          <button onClick={reset} className="strip-link">Try again</button>
         </div>
       )}
 
       {state.phase === 'done' && decisionResult && (
-        <div style={{
-          background: 'var(--pass-bg)', borderBottom: '1px solid #A7F3D0',
-          padding: '7px 24px', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 12, color: 'var(--pass)',
-        }}>
+        <div className="app-strip app-strip-done">
           <strong>Decision logged —</strong>
           <span style={{ textTransform: 'capitalize', fontWeight: 600 }}>{decisionResult.decision}</span>
           <span>· "{decisionResult.auditNote}" · Audit trail saved.</span>
-          <button onClick={reset} style={{ marginLeft: 8, textDecoration: 'underline', background: 'none', border: 'none', color: 'var(--pass)', cursor: 'pointer', fontSize: 12 }}>
-            Submit new report
-          </button>
+          <button onClick={reset} className="strip-link">Submit new report</button>
         </div>
       )}
 
-      {/* ── Body: sidebar + main ─────────────────────────────── */}
-      <div className="emma-body">
+      {/* ── Main content ────────────────────────────────── */}
+      <div className="app-body">
 
-        {/* Sidebar */}
-        <aside className="emma-sidebar">
-          <div style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: 'var(--muted)',
-          }}>
-            Situation Report Input
+        {/* Form section (always visible when idle) */}
+        {!showPipeline && (
+          <div className="app-form-section">
+            <SituationReportForm onSubmit={handleSubmit} isLoading={isLoading} />
           </div>
-          <SituationReportForm onSubmit={handleSubmit} isLoading={isLoading} />
-        </aside>
+        )}
 
-        {/* Main area */}
-        <main className="emma-main">
-          {showPipeline ? (
-            <>
-              <AgentPipeline outputs={state.agentOutputs} />
-              {showGate && state.agentOutputs?.handoff && (
-                <HumanGate
-                  handoff={state.agentOutputs.handoff}
-                  onDecide={handleDecide}
-                  isLogging={state.phase === 'logging'}
-                />
-              )}
-            </>
-          ) : (
-            <div style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-              color: 'var(--muted)',
-              minHeight: 300,
-            }}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4l3 3" />
-              </svg>
-              <div style={{ fontSize: 13, textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}>
-                Submit a situation report to activate the 5-agent pipeline
+        {/* Pipeline output */}
+        {showPipeline && (
+          <div className="app-output">
+            {/* Collapsible sitrep */}
+            {lastReportText && (
+              <div className="app-sitrep-pin">
+                <button className="doc-sitrep-toggle" onClick={() => setShowSitrep(!showSitrep)}>
+                  <span className="doc-sitrep-label">Situation Report</span>
+                  <span className="doc-sitrep-id">{state.reportId}</span>
+                  <span className="doc-sitrep-chevron">{showSitrep ? '▼' : '▶'}</span>
+                </button>
+                {showSitrep && (
+                  <p className="doc-sitrep-text">{lastReportText}</p>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginTop: 4 }}>
-                {['Intake', 'Vulnerability', 'Resource', 'Routing', 'Pattern', 'Handoff'].map((a, i) => (
-                  <span key={a} style={{
-                    fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
-                    textTransform: 'uppercase', color: 'var(--muted)',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--rim)',
-                    borderRadius: 4,
-                    padding: '3px 8px',
-                  }}>{a}</span>
-                ))}
-              </div>
+            )}
+
+            <AgentPipeline outputs={state.agentOutputs} isProcessing={state.phase === 'processing'} />
+
+            {showGate && state.agentOutputs?.handoff && (
+              <HumanGate
+                handoff={state.agentOutputs.handoff}
+                onDecide={handleDecide}
+                isLogging={state.phase === 'logging'}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!showPipeline && (
+          <div className="app-empty">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="app-empty-icon">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v4l3 3" />
+            </svg>
+            <p className="app-empty-text">Submit a situation report to activate the 5-agent pipeline</p>
+            <div className="app-empty-tags">
+              {['Intake', 'Vulnerability', 'Resource', 'Routing', 'Pattern', 'Handoff'].map(a => (
+                <span key={a} className="app-empty-tag">{a}</span>
+              ))}
             </div>
-          )}
-        </main>
+          </div>
+        )}
       </div>
     </div>
   )

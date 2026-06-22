@@ -1,4 +1,1 @@
-"""EMMA AI Layer — FastAPI service with integrated LangGraph agent pipeline."""
-
-__all__ = []
-
+"""agents package — EMMA LangGraph pipeline."""

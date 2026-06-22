@@ -99,9 +99,8 @@ use App\Http\Controllers\Api\ResourceController;
 use App\Http\Controllers\Api\SituationReportController;
 use App\Http\Controllers\Api\AgentLogController;
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/households/{familyId}/vulnerability', [HouseholdController::class, 'vulnerability']);
-    Route::get('/resources', [ResourceController::class, 'index']);
-    Route::post('/situation-reports', [SituationReportController::class, 'store']);
-    Route::post('/agent-logs', [AgentLogController::class, 'store']);
-});
+// EMMA operator routes are public for demo — no auth token needed
+Route::get('/households/{familyId}/vulnerability', [HouseholdController::class, 'vulnerability']);
+Route::get('/resources', [ResourceController::class, 'index']);
+Route::post('/situation-reports', [SituationReportController::class, 'store']);
+Route::post('/agent-logs', [AgentLogController::class, 'store']);

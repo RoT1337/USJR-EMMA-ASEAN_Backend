@@ -112,11 +112,11 @@ function App() {
                 DRRMO Operator Dashboard
               </span>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 1, letterSpacing: '0.04em' }}>
+            <div className="emma-header-subtitle">
               Emergency Management &amp; Monitoring Assistants · AAIH 2026
             </div>
           </div>
-          <div style={{ width: 1, height: 28, background: 'var(--rim)', flexShrink: 0 }} />
+          <div className="emma-header-sep" />
           <HealthBanner health={health} error={healthError} />
         </div>
 
@@ -151,16 +151,7 @@ function App() {
 
       {/* ── Status strip ─────────────────────────────────────── */}
       {(state.phase === 'submitting' || state.phase === 'processing' || state.phase === 'logging') && (
-        <div style={{
-          background: 'var(--alert-bg)',
-          borderBottom: '1px solid #FDDCCA',
-          padding: '7px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          fontSize: 12,
-          color: 'var(--alert)',
-        }}>
+        <div className="emma-status-strip">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--alert)', animation: 'blink 1s ease infinite', flexShrink: 0 }} />
           {state.phase === 'submitting' && 'Registering report with Laravel…'}
           {state.phase === 'processing' && `Running 5-agent pipeline…`}
@@ -197,20 +188,10 @@ function App() {
       )}
 
       {/* ── Body: sidebar + main ─────────────────────────────── */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="emma-body">
 
         {/* Sidebar */}
-        <aside style={{
-          width: 360,
-          flexShrink: 0,
-          background: 'var(--surface)',
-          borderRight: '1px solid var(--rim)',
-          overflowY: 'auto',
-          padding: '20px 20px 24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}>
+        <aside className="emma-sidebar">
           <div style={{
             fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
             textTransform: 'uppercase', color: 'var(--muted)',
@@ -221,14 +202,7 @@ function App() {
         </aside>
 
         {/* Main area */}
-        <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}>
+        <main className="emma-main">
           {showPipeline ? (
             <>
               <AgentPipeline outputs={state.agentOutputs} />

@@ -100,3 +100,113 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ── Responsive layout ─────────────────────────────────────── */
+.emma-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.emma-sidebar {
+  width: 360px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--rim);
+  overflow-y: auto;
+  padding: 20px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.emma-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Tablet: narrower sidebar */
+@media (max-width: 900px) {
+  .emma-sidebar {
+    width: 300px;
+  }
+}
+
+/* Mobile: stack vertically, sidebar goes on top */
+@media (max-width: 640px) {
+  .emma-body {
+    flex-direction: column;
+    overflow: visible;
+    overflow-y: auto;
+  }
+
+  .emma-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--rim);
+    overflow-y: visible;
+    padding: 16px;
+  }
+
+  .emma-main {
+    overflow-y: visible;
+    padding: 16px;
+  }
+}
+
+/* ── Header responsive ─────────────────────────────────────── */
+.emma-header-subtitle {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 1px;
+  letter-spacing: 0.04em;
+}
+
+.emma-header-sep {
+  width: 1px;
+  height: 28px;
+  background: var(--rim);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .emma-header-subtitle { display: none; }
+  .emma-header-sep { display: none; }
+}
+
+/* ── HumanGate buttons: stack on very small screens ────────── */
+.gate-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 400px) {
+  .gate-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Status strip wraps on mobile ──────────────────────────── */
+.emma-status-strip {
+  background: var(--alert-bg);
+  border-bottom: 1px solid #FDDCCA;
+  padding: 7px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--alert);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .emma-status-strip {
+    padding: 8px 16px;
+  }
+}

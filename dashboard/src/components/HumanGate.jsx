@@ -83,7 +83,7 @@ export default function HumanGate({ handoff, onDecide, isLogging }) {
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+      <div className="gate-buttons">
         {[
           { label: '✓ Approve', decision: 'approved', bg: 'var(--pass)',  text: '#fff' },
           { label: '✎ Modify',  decision: 'modified',  bg: 'var(--amber)', text: '#fff' },

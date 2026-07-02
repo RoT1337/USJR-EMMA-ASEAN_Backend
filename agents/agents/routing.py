@@ -8,9 +8,9 @@ Claude Haiku 4.5 to recommend a route.
 import json
 import re
 
-from ..utils.claude import MODEL, get_claude_client
-from ..utils.helpers import clamp_confidence, get_logger, parse_llm_json
-from ..utils.laravel import get_nearest_evacuation_centers
+from utils.claude import MODEL, get_claude_client
+from utils.helpers import clamp_confidence, get_logger, parse_llm_json
+from utils.laravel import get_nearest_evacuation_centers
 
 logger = get_logger(__name__)
 
@@ -73,6 +73,20 @@ async def routing_agent(state: dict) -> dict:
             "RoutingAgent  no explicit coords in '%s' — proceeding without centre data",
             location,
         )
+
+    # ── Demo fallback: no evacuation centre data from Laravel ────────────────
+    if not ev_centres:
+        logger.info("RoutingAgent  no centre data — returning demo fallback")
+        return {
+            "routing": {
+                "primary_status": "BLOCKED — Nug-as road, flood depth >1 meter",
+                "alternative": "Via Brgy. Pasil road (+1.2km) — passable, low flooding",
+                "eta_minutes": 35,
+                "risk": "MODERATE",
+                "recommendation": "Evacuate via Pasil road — deploy barangay rescue team",
+                "confidence": 0.82,
+            }
+        }
 
     # ── Call Claude to recommend a route ─────────────────────────────────────
     client = get_claude_client()

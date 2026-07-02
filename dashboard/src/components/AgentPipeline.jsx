@@ -103,6 +103,7 @@ export default function AgentPipeline({ outputs, isProcessing = false }) {
           return (
             <div
               key={agent.key}
+              id={`doc-section-${agent.key}`}
               className={`pipeline-step-animate ${isSkeleton ? 'skeleton-reveal' : 'card-reveal'}`}
               style={{ animationDelay: `${animationDelay}ms` }}
             >

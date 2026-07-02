@@ -1314,3 +1314,184 @@ body {
 
   .doc-main { padding: 12px 10px; }
 }
+
+/* ── Intro / Presentation screen ───────────────────────────── */
+@keyframes introFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes introPop {
+  from { opacity: 0; transform: scale(0.85) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes introGlow {
+  0%, 100% { opacity: 0.12; transform: scale(1); }
+  50%       { opacity: 0.22; transform: scale(1.08); }
+}
+@keyframes ctaPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234,88,12,0.5); }
+  50%       { box-shadow: 0 0 0 12px rgba(234,88,12,0); }
+}
+
+.intro-root {
+  position: fixed;
+  inset: 0;
+  background: var(--ground);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.intro-bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: introGlow 6s ease-in-out infinite;
+}
+.intro-bg-glow-1 {
+  width: 480px; height: 480px;
+  background: rgba(234,88,12,0.08);
+  top: -100px; left: -80px;
+  animation-delay: 0s;
+}
+.intro-bg-glow-2 {
+  width: 360px; height: 360px;
+  background: rgba(30,64,175,0.06);
+  bottom: -80px; right: -60px;
+  animation-delay: 3s;
+}
+
+.intro-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  text-align: center;
+  max-width: 960px;
+  width: 100%;
+}
+
+.intro-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--alert);
+  background: rgba(234,88,12,0.12);
+  border: 1px solid rgba(234,88,12,0.3);
+  padding: 4px 14px;
+  border-radius: 99px;
+  animation: introFadeUp 0.5s 0.1s both;
+}
+
+.intro-brand {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: clamp(72px, 12vw, 120px);
+  color: var(--text);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  animation: introFadeUp 0.6s 0.2s both;
+}
+
+.intro-sub {
+  font-size: clamp(14px, 2.2vw, 20px);
+  font-weight: 400;
+  color: var(--text-dim);
+  letter-spacing: 0.01em;
+  animation: introFadeUp 0.6s 0.3s both;
+}
+
+.intro-pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0;
+  animation: introFadeUp 0.6s 0.38s both;
+}
+
+.intro-agent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  opacity: 0;
+  animation: introPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+
+.intro-agent-icon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+}
+.intro-agent-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+.intro-agent-sub {
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.intro-agent-arrow {
+  position: absolute;
+  right: -18px;
+  top: 14px;
+  font-size: 14px;
+  color: var(--rim);
+  pointer-events: none;
+}
+
+.intro-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  animation: introFadeUp 0.6s 1.2s both;
+}
+
+.intro-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 14px 36px;
+  background: var(--alert);
+  color: #FFFFFF;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  animation: introFadeUp 0.6s 1.4s both, ctaPulse 2s 2s ease-in-out infinite;
+  transition: background 0.15s, transform 0.1s;
+}
+.intro-cta:hover { background: #c2410c; transform: translateY(-1px); }
+.intro-cta:active { transform: translateY(0); }
+
+.intro-cta-arrow {
+  font-size: 18px;
+  transition: transform 0.15s;
+}
+.intro-cta:hover .intro-cta-arrow { transform: translateX(4px); }
+
+.intro-footer {
+  position: absolute;
+  bottom: 20px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  animation: introFadeUp 0.6s 1.6s both;
+}

@@ -5,10 +5,12 @@ import SituationReportForm from './components/SituationReportForm'
 import AgentPipeline from './components/AgentPipeline'
 import AgentNav from './components/AgentNav'
 import HumanGate from './components/HumanGate'
+import IntroScreen from './components/IntroScreen'
 
 const INITIAL = { phase: 'idle', reportId: null, agentOutputs: null, error: null }
 
 function App() {
+  const [showIntro, setShowIntro] = useState(true)
   const [health, setHealth] = useState(null)
   const [healthError, setHealthError] = useState(false)
   const [state, setState] = useState(INITIAL)
@@ -84,6 +86,10 @@ function App() {
   const isLoading    = state.phase === 'submitting' || state.phase === 'processing'
   const showPipeline = ['submitting', 'processing', 'awaiting_decision', 'logging', 'done'].includes(state.phase)
   const showGate     = state.phase === 'awaiting_decision' || state.phase === 'logging'
+
+  if (showIntro) {
+    return <IntroScreen onLaunch={() => setShowIntro(false)} />
+  }
 
   return (
     <div className="app-root">

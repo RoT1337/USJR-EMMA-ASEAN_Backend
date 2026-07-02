@@ -25,6 +25,28 @@ If those services aren't running, the app still loads — the health banner will
 or "unreachable" and submitting a report will error, exactly like the real dashboard does. That's
 expected, not a bug in this UI.
 
+## Quick launch (all 3 services, Windows PowerShell)
+
+If you've already done first-time setup for Laravel, the Python agent service, and this dashboard
+at least once, there's a launcher script at the **repo root** (`../start-dashboard-loveable.ps1`)
+that opens three PowerShell windows and starts everything for you:
+
+```powershell
+cd USJR-EMMA-ASEAN_Backend
+.\start-dashboard-loveable.ps1
+```
+
+It starts Laravel on `:8000`, the Python agent service on `:8001`, and this dashboard on `:5174`
+(kept distinct from the real dashboard's `:5173` so both can run side by side). If PowerShell
+blocks it with an execution-policy error, run once:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+This only launches already-configured services — do the manual first-time setup below at least
+once first.
+
 ## Setup (Windows)
 
 Using **PowerShell** or **Git Bash**:

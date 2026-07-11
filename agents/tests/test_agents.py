@@ -139,6 +139,26 @@ class TestVulnerabilityAgent:
         assert isinstance(result["vulnerability"]["tier1"], list)
         assert isinstance(result["vulnerability"]["tier2"], list)
 
+    async def test_coerces_scalar_tier_fields_to_lists(self, full_state):
+        """Scalar Claude output for tier fields should be normalized to a list."""
+        bad_response = {
+            "tier1": "2 pregnant women",
+            "tier2": "1 PWD male",
+            "recommendation": "Move immediately",
+            "confidence": 0.9,
+        }
+        from agents.tests.conftest import make_claude_mock
+
+        mock_client = make_claude_mock(bad_response)
+        with patch("agents.agents.vulnerability.get_claude_client", return_value=mock_client), \
+             patch("agents.agents.vulnerability.get_households_by_location", AsyncMock(return_value=[])), \
+             patch("agents.agents.vulnerability.get_household_vulnerability", AsyncMock(return_value={})): 
+            from agents.agents.vulnerability import vulnerability_agent
+            result = await vulnerability_agent(full_state)
+
+        assert result["vulnerability"]["tier1"] == ["2 pregnant women"]
+        assert result["vulnerability"]["tier2"] == ["1 PWD male"]
+
     async def test_handles_laravel_unavailable(self, full_state, mock_claude_vulnerability):
         """Agent must continue and return a result even if Laravel is down."""
         with patch("agents.agents.vulnerability.get_claude_client", return_value=mock_claude_vulnerability), \
@@ -188,6 +208,25 @@ class TestResourceAgent:
 
         assert isinstance(result["resource"]["gaps"], list)
         assert isinstance(result["resource"]["available"], list)
+
+    async def test_coerces_scalar_resource_fields_to_lists(self, full_state):
+        """Scalar Claude output for resource lists should be normalized to lists."""
+        bad_response = {
+            "gaps": "Food shortage",
+            "available": "Alcoy depot",
+            "recommendation": "Request supplies",
+            "confidence": 0.8,
+        }
+        from agents.tests.conftest import make_claude_mock
+
+        mock_client = make_claude_mock(bad_response)
+        with patch("agents.agents.resource.get_claude_client", return_value=mock_client), \
+             patch("agents.agents.resource.get_resources", AsyncMock(return_value={})): 
+            from agents.agents.resource import resource_agent
+            result = await resource_agent(full_state)
+
+        assert result["resource"]["gaps"] == ["Food shortage"]
+        assert result["resource"]["available"] == ["Alcoy depot"]
 
     async def test_handles_laravel_unavailable(self, full_state, mock_claude_resource):
         """Agent must return a result with default gaps if Laravel is down."""
@@ -318,6 +357,170 @@ class TestPatternAgent:
             result = await pattern_agent(full_state)
 
         assert "pattern" in result
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5b. QDRANT SEEDING (real-data fetch from ReliefWeb)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestQdrantRealDataSeeding:
+    """Tests for utils/qdrant.py — ReliefWeb-backed seed event fetching.
+
+    These never hit the network: httpx is mocked so tests stay fast and
+    deterministic, but the shape of the mocked response mirrors the real
+    ReliefWeb API contract.
+    """
+
+    def _make_reliefweb_response(self, body_html: str, url: str = "https://reliefweb.int/report/123"):
+        """Build a fake httpx.Response-like object for one ReliefWeb report."""
+        payload = {
+            "data": [
+                {
+                    "fields": {
+                        "title": "Situation Report",
+                        "body-html": body_html,
+                        "url": url,
+                        "date": {"created": "2025-11-01T00:00:00+00:00"},
+                    }
+                }
+            ]
+        }
+        mock_response = MagicMock()
+        mock_response.json.return_value = payload
+        mock_response.raise_for_status = MagicMock()
+        return mock_response
+
+    def _patch_httpx_get(self, mock_response):
+        """Patch httpx.AsyncClient.get to return the given mock response."""
+        mock_http_client = MagicMock()
+        mock_http_client.get = AsyncMock(return_value=mock_response)
+        mock_http_client.__aenter__ = AsyncMock(return_value=mock_http_client)
+        mock_http_client.__aexit__ = AsyncMock(return_value=False)
+        return patch("httpx.AsyncClient", return_value=mock_http_client)
+
+    async def test_fetch_reliefweb_summary_strips_html_and_truncates(self):
+        """Body HTML must be stripped to plain text and capped at 280 chars."""
+        from agents.utils.qdrant import _fetch_reliefweb_summary
+
+        mock_response = self._make_reliefweb_response("<p>Flooding displaced <b>thousands</b> of residents.</p>")
+        with self._patch_httpx_get(mock_response):
+            result = await _fetch_reliefweb_summary("Vietnam flooding 2025", country="VN")
+
+        assert result is not None
+        assert "<" not in result["snippet"] and ">" not in result["snippet"]
+        assert len(result["snippet"]) <= 280
+        assert result["source_url"] == "https://reliefweb.int/report/123"
+
+    async def test_fetch_reliefweb_summary_returns_none_on_empty_results(self):
+        """No matching reports must return None, not raise."""
+        from agents.utils.qdrant import _fetch_reliefweb_summary
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"data": []}
+        mock_response.raise_for_status = MagicMock()
+        with self._patch_httpx_get(mock_response):
+            result = await _fetch_reliefweb_summary("nonexistent event", country="XX")
+
+        assert result is None
+
+    async def test_fetch_reliefweb_summary_returns_none_on_network_error(self):
+        """A network/HTTP failure must return None, not raise, so seeding can fall back."""
+        import httpx
+
+        from agents.utils.qdrant import _fetch_reliefweb_summary
+
+        mock_http_client = MagicMock()
+        mock_http_client.get = AsyncMock(side_effect=httpx.ConnectError("connection refused"))
+        mock_http_client.__aenter__ = AsyncMock(return_value=mock_http_client)
+        mock_http_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_http_client):
+            result = await _fetch_reliefweb_summary("Typhoon Fung-wong Philippines", country="PH")
+
+        assert result is None
+
+    async def test_build_real_seed_events_uses_live_snippet_when_available(self):
+        """When ReliefWeb returns data, the event's outcome must include it (not the fallback)."""
+        from agents.utils.qdrant import REAL_EVENT_SOURCES, build_real_seed_events
+
+        mock_response = self._make_reliefweb_response("<p>Real reported impact text.</p>")
+        with self._patch_httpx_get(mock_response):
+            events = await build_real_seed_events()
+
+        assert len(events) == len(REAL_EVENT_SOURCES)
+        for event in events:
+            assert "Real reported impact text." in event["outcome"]
+            assert "Details unavailable" not in event["outcome"]
+
+    async def test_build_real_seed_events_falls_back_when_reliefweb_unreachable(self):
+        """When ReliefWeb is unreachable, each event must use its own
+        verified fallback_outcome (real, source-checked seed data) rather
+        than a generic placeholder — the collection stays usable even
+        before RELIEFWEB_APPNAME is approved."""
+        import httpx
+
+        from agents.utils.qdrant import REAL_EVENT_SOURCES, build_real_seed_events
+
+        mock_http_client = MagicMock()
+        mock_http_client.get = AsyncMock(side_effect=httpx.ConnectError("connection refused"))
+        mock_http_client.__aenter__ = AsyncMock(return_value=mock_http_client)
+        mock_http_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_http_client):
+            events = await build_real_seed_events()
+
+        assert len(events) == len(REAL_EVENT_SOURCES)
+        for src, event in zip(REAL_EVENT_SOURCES, events):
+            assert event["outcome"] == src["fallback_outcome"]
+            assert "placeholder" not in event["outcome"].lower()
+            # Required schema fields must still be present even on fallback.
+            assert {"event_name", "location", "date", "hazard_type",
+                    "outcome", "cross_border_note"}.issubset(event.keys())
+
+    async def test_fallback_outcomes_are_distinct_per_event(self):
+        """Fallback text for different events must not collapse into one
+        identical boilerplate string — each is its own verified summary."""
+        import httpx
+
+        from agents.utils.qdrant import REAL_EVENT_SOURCES, build_real_seed_events
+
+        mock_http_client = MagicMock()
+        mock_http_client.get = AsyncMock(side_effect=httpx.ConnectError("connection refused"))
+        mock_http_client.__aenter__ = AsyncMock(return_value=mock_http_client)
+        mock_http_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("httpx.AsyncClient", return_value=mock_http_client):
+            events = await build_real_seed_events()
+
+        outcomes = [e["outcome"] for e in events]
+        assert len(set(outcomes)) == len(REAL_EVENT_SOURCES), (
+            "Each event's fallback summary should be distinct, not a "
+            "shared generic string."
+        )
+
+    async def test_no_match_outcome_used_when_source_has_no_fallback_outcome(self):
+        """A source with no `fallback_outcome` set (e.g. one added later
+        without a manual summary yet) must still get a clear, event-specific
+        message — not a crash and not a silent empty outcome."""
+        from agents.utils.qdrant import _no_match_outcome
+
+        fake_source = {
+            "event_name": "Future Placeholder Event",
+            "query": "future placeholder event query",
+            "country": "XX",
+        }
+        message = _no_match_outcome(fake_source)
+
+        assert fake_source["event_name"] in message
+        assert fake_source["query"] in message
+        assert "placeholder" in message.lower()
+
+    async def test_build_real_seed_events_covers_required_countries(self):
+        """The 4 new sources must cover PH, ID, VN, TH as the roadmap item requires."""
+        from agents.utils.qdrant import REAL_EVENT_SOURCES
+
+        countries = {src["country"] for src in REAL_EVENT_SOURCES}
+        assert countries == {"PH", "ID", "VN", "TH"}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

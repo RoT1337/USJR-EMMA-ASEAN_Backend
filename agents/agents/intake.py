@@ -33,7 +33,13 @@ Required fields:
 Language detection notes:
   - Filipino/Tagalog: uses words like "mga", "ang", "sa", "na", "ay", "po"
   - Cebuano/Bisaya: uses words like "mga", "sa", "ang", "dili", "naa", "kaayo"
+  - Bahasa Indonesia: detect key transition and functional words such as "yang", "dan", "di", "ini", "untuk"
+  - Vietnamese: detect common words such as "và", "của", "là", "không", and look for characteristic diacritics (e.g., á, à, ộ, etc.)
+  - Thai: detect Thai script (non-Latin character set). This is highly distinct and easily separable by script alone.
   - English: standard English text
+
+IMPORTANT — Proper Noun Preservation (Vietnamese and Bahasa):
+  Preserve all administrative location names (province, municipality, barangay/desa equivalents) exactly as written in the source language. Do not translate or romanize place names.
 
 Urgency guidelines:
   CRITICAL — immediate loss of life, mass casualties, total infrastructure collapse

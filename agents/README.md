@@ -83,21 +83,43 @@ You already have a free Qdrant Cloud cluster, so you just need its URL/key and a
 3. Go to the **API Keys** section of the cluster page. If you saved the key when you created the cluster, reuse it; if you lost it (it's only shown once), click **Create** to generate a new one.
 4. Put both values into `.env` as shown in step 3.
 
-**Create the collection and seed sample data:**
+**Create the collection and seed data:**
 
-The repo includes `utils/qdrant.py` with a `search_prior_events()` function (used by `agents/pattern.py`) and a one-off seeding routine. From `backend/agents`, with your `.env` filled in:
+The repo includes `utils/qdrant.py` with a `search_prior_events()` function (used by `agents/pattern.py`) and a one-off seeding routine. Seeding now pulls from two sources:
+
+- `BASE_SEED_EVENTS` — the original 3 hand-written Cebu events (Typhoon Odette, Typhoon Kalmaegi, Cebu City Flash Flood).
+- `REAL_EVENT_SOURCES` — 4 additional events (Typhoon Fung-wong / PH, Cyclone Senyar / ID, Vietnam flooding 2025 / VN, Thailand flooding in Hat Yai / TH) whose narrative text is pulled **live from the [ReliefWeb API](https://api.reliefweb.int/v1/reports)** (a free, no-API-key disaster-report database run by UN OCHA) at seed time, rather than being written by hand.
+
+From `backend/agents`, with your `.env` filled in:
 
 ```bash
 python -m utils.qdrant
 ```
 
-Expected output:
+Expected output (before your ReliefWeb appname is approved — using verified fallback data):
 ```
 Created collection 'prior_events'
-Seeded 3 prior events into 'prior_events'
+Building the 4 additional seed events (live ReliefWeb match, falling back to verified summaries where needed)...
+  ○ Typhoon Fung-wong: no live ReliefWeb match — using verified fallback summary
+  ○ Cyclone Senyar: no live ReliefWeb match — using verified fallback summary
+  ○ Vietnam Flooding 2025: no live ReliefWeb match — using verified fallback summary
+  ○ Thailand Flooding, Hat Yai: no live ReliefWeb match — using verified fallback summary
+Seeded 7 prior events into 'prior_events' (3 base + 4 additional — see the ✓/○/✗ lines above for which source each one used)
 ```
 
-This creates a `prior_events` collection (384-dim, cosine distance) and loads a few synthetic disaster events (Typhoon Odette, Typhoon Kalmaegi, Cebu City Flash Flood) using Qdrant Cloud's built-in inference — no separate embedding model or extra API key needed.
+Once `RELIEFWEB_APPNAME` is an approved value, matching entries will instead show `✓ ... matched a live ReliefWeb report` and use fresher live text.
+
+This creates a `prior_events` collection (384-dim, cosine distance) using Qdrant Cloud's built-in inference — no separate embedding model or extra API key needed.
+
+**About the ReliefWeb lookups:** each of the 4 `REAL_EVENT_SOURCES` entries resolves its `outcome` in priority order — (a) a live matching ReliefWeb report (HTML stripped, short excerpt + source URL), (b) that source's `fallback_outcome`, a short summary already verified against public reporting (AP/Reuters/Wikipedia/NASA/CDP, Nov–Dec 2025) so the collection has real, usable data today, or (c) — only for a source with no `fallback_outcome` set — a generic message naming the specific event/query that had no match. Seeding never fails outright; today (before your appname is approved) you'll get tier (b) for all 4, and tier (a) will kick in automatically once ReliefWeb starts accepting your requests.
+
+> **⚠️ You need a pre-approved ReliefWeb `appname`.** As of 1 Nov 2025, ReliefWeb requires apps to use a pre-approved `appname` — an arbitrary string is no longer accepted (the old `/v1/` endpoint is also decommissioned; `utils/qdrant.py` already uses `/v2/`). Request one via [reliefweb.int/contact](https://reliefweb.int/contact), then set it in `.env`:
+> ```
+> RELIEFWEB_APPNAME=your-approved-appname
+> ```
+> Until you have one, ReliefWeb will reject the requests (HTTP 401/403) and all 4 `REAL_EVENT_SOURCES` entries will seed with their placeholder outcome — the pipeline still works, you just won't get real report text.
+
+Requires the `httpx` package (add it to `requirements.txt` if it isn't already there — it's already used by the test suite for `httpx.AsyncClient`/`ASGITransport`).
 
 **Verify it worked:**
 
@@ -109,11 +131,13 @@ set +a
 curl "$QDRANT_URL/collections/prior_events" -H "api-key: $QDRANT_API_KEY"
 ```
 
-You should see `"points_count": 3` in the response.
+You should see `"points_count": 7` in the response.
 
-> Re-running `python -m utils.qdrant` is safe — it checks if the collection already exists before creating it, and re-upserts the same 3 seed points (same IDs, so no duplicates).
+> Re-running `python -m utils.qdrant` is safe — it checks if the collection already exists before creating it, re-fetches the ReliefWeb events, and re-upserts all 7 points (same IDs, so no duplicates).
 
-**Add more seed events:** edit the `SEED_EVENTS` list in `utils/qdrant.py` to cover whatever hazard types/locations you're testing with, then re-run `python -m utils.qdrant`.
+**Add more seed events:**
+- Hand-written event → add an entry to `BASE_SEED_EVENTS` in `utils/qdrant.py`.
+- Real-data event → add an entry to `REAL_EVENT_SOURCES` with a `query`, optional `country` (ISO2), and a `fallback_outcome`, then re-run `python -m utils.qdrant`.
 
 **Free tier note:** Qdrant Cloud free clusters auto-suspend after a week of inactivity (data is preserved — just reactivate from the dashboard) and are deleted after 4 weeks if never reactivated.
 
@@ -185,6 +209,31 @@ What's covered:
 - Each of the 6 agent nodes — required output schema, value validation (e.g. urgency/risk enums), confidence clamping, and graceful fallback when Claude returns bad JSON or Laravel/Qdrant are unreachable
 - `graph.py` — pipeline wiring and that `run_pipeline` returns all expected keys
 - `main.py` — `/health` and `/process` endpoints, including validation errors (422) and pipeline failures (500)
+
+### Live ReliefWeb integration tests (real network calls)
+
+`tests/test_qdrant_live.py` is separate from `test_agents.py` — it makes **real, unmocked** calls to the ReliefWeb API instead of mocking `httpx`. It proves two things against the live service:
+
+1. A broad, realistic query (e.g. "Philippines typhoon") returns a real report with a non-empty snippet and source URL.
+2. A deliberately nonsense query returns a clean "no match" (`None`) — and when that happens for one of the real `REAL_EVENT_SOURCES` entries, the resulting seed event's `outcome` names that specific event and query rather than failing silently or returning a generic message.
+
+Run them on their own:
+
+```bash
+pytest tests/test_qdrant_live.py -v
+```
+
+Exclude them from a normal run of the rest of the suite (they're slower and depend on an external service):
+
+```bash
+pytest tests/ -m "not live"
+```
+
+Each test does a lightweight preflight request first and **skips itself with a specific reason** — rather than failing — if:
+- this environment has no outbound network access to `api.reliefweb.int`, or
+- `RELIEFWEB_APPNAME` isn't a pre-approved appname yet (ReliefWeb returns 401/403 — see the appname note in step 4).
+
+So a clean `pytest tests/test_qdrant_live.py -v` run with everything "skipped" usually just means you haven't set a pre-approved `RELIEFWEB_APPNAME` yet, not that anything is broken.
 
 ### If tests fail to collect/import
 

@@ -1,0 +1,160 @@
+EMMA: Grand Finale Tasks
+
+Author: Alliyana Rose Garcia
+
+Institution: University of San Jose-Recoletos (AAIH 2026)
+
+Target Event: Grand Finale — July 31, Danang
+
+Video Recording Target: This week
+
+Last Updated: July 1, 2026
+
+Document Context
+
+This document outlines the final engineering tasks required for the EMMA platform ahead of the 2026 Grand Finale. It is transcribed and formatted from the source file: EMMA_Alliyana_GrandFinale_Tasks.pdf.
+
+What's Already Done (Confirmed)
+
+Pipeline: Full six-agent LangGraph pipeline is active.
+
+Testing: 46 passing tests.
+
+Database: Qdrant is seeded with 3 initial events.
+
+Languages: Filipino and English are working reliably through Claude Haiku 4.5.
+
+Output Schema: Already anticipates all 5 target languages.
+
+[!NOTE]
+This document specifically covers writing the actual detection guidance for the 3 remaining languages (Bahasa Indonesia, Vietnamese, and Thai), expanding Qdrant, and implementing the cross-border scenario.
+
+Important Coordination Note
+
+When you are done — tell Ryu before he records anything. Once your changes are merged and tested, message Ryu directly so he knows the full feature set is stable before he starts the official screen recording for the promotional video and Grand Finale demo. Recording against a half-finished pipeline means re-recording later. Confirm with him first.
+
+Priority Order (Execute in Sequence)
+
+1. Expand Qdrant Seed Data
+
+Estimated Time: 1–2 hours
+
+Current State: Only 3 events are currently seeded (Typhoon Odette, Typhoon Kalmaegi, Cebu Flash Flood). The Regional Pattern Agent needs broader coverage to return meaningful matches across different hazard types and countries, which is critical for the cross-border scenario.
+
+Events to Add (Minimum of 4)
+
+Typhoon Fung-wong (Philippines): Provides a second PH reference point beyond Odette/Kalmaegi.
+
+Cyclone Senyar (Indonesia, Strait of Malacca): Required for handling any Indonesia-context queries.
+
+Vietnam Flooding Event (2025): Critical for the $PH \rightarrow VN$ cross-border scenario to return a real match on the Vietnam side.
+
+Thailand Flooding (Hat Yai): Gives Thai-language demo queries a relevant historical event to retrieve.
+
+Implementation Instructions
+
+Edit the SEED_EVENTS list in utils/qdrant.py following the structure of the existing three events. Once updated, re-run:
+
+python -m utils.qdrant
+
+
+Note: This script is safe to re-run. It checks for the existing collection and re-upserts data by ID, preventing duplicate entries.
+
+Verification
+
+Verify the update by querying the Qdrant collection directly:
+
+curl "$QDRANT_URL/collections/prior_events" -H "api-key: SQDRANT_API_KEY"
+
+
+Confirm that the points count in the response reflects the new total.
+
+2. Multilingual Extension (Bahasa, Vietnamese, Thai)
+
+Estimated Time: Full Day (New work, not a minor refinement)
+
+Scope Correction: Although the output schema in intake.py lists all five languages as valid values, the system prompt currently only contains actual detection guidance for Filipino, Cebuano, and English. Bahasa, Vietnamese, and Thai have no prompt-level guidance. This task involves writing new prompt logic.
+
+Prompt Expansion Requirements
+
+Add a short block of distinguishing words, markers, and rules per language to the system prompt following the pattern of the existing Filipino/Cebuano notes:
+
+Language Detection Notes:
+
+Bahasa Indonesia: Detect key transition and functional words such as "yang", "dan", "di", "ini", "untuk".
+
+Vietnamese: Detect common words such as "và", "của", "là", "không", and look for characteristic diacritics (e.g., á, à, ộ, etc.).
+
+Thai: Detect Thai script (non-Latin character set). This is highly distinct and easily separable by script alone.
+
+Proper Noun Preservation (New Instruction):
+Add this explicit instruction to the prompt for Vietnamese and Bahasa to prevent translation errors:
+
+"Preserve all administrative location names (province, municipality, barangay/desa equivalents) exactly as written in the source language. Do not translate or romanize place names."
+
+Testing & Evaluation Protocol
+
+Prepare one test situation report for each language and run it through the process.
+
+Verify that the Intake Agent correctly detects the language and extracts the location, hazard_type, and urgency fields without errors.
+
+Run each test at least twice (the first pass identifies prompt gaps; the second pass confirms the fix).
+
+Thai Evaluation: A lower model confidence is expected and acceptable. Because Thai is structurally different from your high-resource languages, do not over-invest trying to make it perfect. A lower, honest confidence score with a flagged mandatory human review is a successful outcome.
+
+Priority If Time is Short
+
+Bahasa Indonesia (Needed if you demo an Indonesia scenario)
+
+Vietnamese (Crucial for the cross-border demo below; this is the highest priority)
+
+Thai (Nice-to-have, non-blocking)
+
+3. Cross-Border $PH \rightarrow VN$ Scenario
+
+Estimated Time: Half Day
+
+Value Proposition: This is your core ASEAN differentiator. It is the single scenario that proves EMMA is a regional intelligence tool rather than a localized Philippine application. Grand Finale judges will expect to see this feature highlighted.
+
+Scenario Requirements
+
+Input: A Vietnamese-language situation report describing meteorological/ground conditions consistent with Typhoon Kalmaegi approaching Vietnam after already making landfall in the Philippines.
+
+Agent Behavior: The Regional Pattern Agent must retrieve the historical Kalmaegi PH event from Qdrant and surface the connection explicitly in its output:
+
+"Same storm system made landfall in Alcoy, Philippines 36 hours prior. Flood escalation pattern suggests similar risk here."
+
+Testing: Test this end-to-end at least 3 times before the demo. Cross-border retrieval relies heavily on your Qdrant seed data containing both the PH and VN events with compatible semantic structures.
+
+Sample Test Input (Vietnamese)
+
+Báo cáo tình hình [Province], Việt Nam
+Bão Kalmaegi đang tiến gần sau khi đổ bộ Philippines.
+Ước tính [X] hộ dân bị ảnh hưởng.
+Cần sơ tán khẩn cấp khu vực ven biển.
+
+
+[!WARNING]
+Have Jamal or someone with Vietnamese proficiency review this input text before using it in the live demo. Presenting machine-translated Vietnamese in a live pitch in Danang carries high risk if a Vietnamese-speaking judge is on the panel.
+
+Coordination Note
+
+Talk to Ryu before starting Task 1. He needs to ensure the expanded Qdrant data displays correctly on the Regional Pattern Agent card. Confirm that the response schema hasn't changed. If the fields are identical but simply contain more entries, no complex coordination is needed beyond a quick heads-up.
+
+Testing Checklist Before Demo Recording
+
+[ ] All 46 existing tests still pass after Qdrant database changes.
+
+[ ] Qdrant collection shows the correct points_count after seeding.
+
+[ ] Filipino demo scenario still works exactly as before (zero regressions).
+
+[ ] Vietnamese cross-border scenario tested end-to-end at least 3 times successfully.
+
+[ ] Native or near-native Vietnamese speaker has reviewed the test input text.
+
+[ ] Bahasa Indonesia test input runs cleanly without errors.
+
+EMMA Grand Finale Tasks | Alliyana Rose Garcia
+
+University of San Jose-Recoletos — July 2026

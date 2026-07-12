@@ -107,6 +107,17 @@ async def resource_agent(state: dict) -> dict:
         }
 
     result["confidence"] = clamp_confidence(result.get("confidence", 0.0))
+
+    def _as_list(value) -> list:
+        if isinstance(value, list):
+            return value
+        if value is None:
+            return []
+        return [value]
+
+    result["gaps"] = _as_list(result.get("gaps"))
+    result["available"] = _as_list(result.get("available"))
+
     logger.info(
         "ResourceAgent  gaps=%d  available=%d  confidence=%.2f",
         len(result.get("gaps", [])),

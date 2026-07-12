@@ -11,7 +11,11 @@ Run with:
 """
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

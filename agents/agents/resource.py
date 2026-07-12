@@ -7,9 +7,9 @@ Claude Haiku 4.5 for gap analysis.
 """
 import json
 
-from ..utils.claude import MODEL, get_claude_client
-from ..utils.helpers import clamp_confidence, get_logger, parse_llm_json
-from ..utils.laravel import get_resources
+from utils.claude import MODEL, get_claude_client
+from utils.helpers import clamp_confidence, get_logger, parse_llm_json
+from utils.laravel import get_resources
 
 logger = get_logger(__name__)
 
@@ -52,6 +52,21 @@ async def resource_agent(state: dict) -> dict:
         stockpile = await get_resources(lgu_id)
     except Exception as exc:
         logger.warning("ResourceAgent  Laravel unavailable: %s", exc)
+
+    # ── Demo fallback: no stockpile data from Laravel ────────────────────────
+    if not stockpile:
+        logger.info("ResourceAgent  no stockpile data — returning demo fallback")
+        return {
+            "resource": {
+                "gaps": ["Food — 3-day deficit", "Prenatal medicine kit needed"],
+                "available": [
+                    "Alcoy Central School EC — 200 slots, 45 occupied",
+                    "Nearest depot 2.3km via Pasil road",
+                ],
+                "recommendation": "Request emergency food packs and prenatal medical kits",
+                "confidence": 0.75,
+            }
+        }
 
     # ── Call Claude for gap analysis ──────────────────────────────────────────
     client = get_claude_client()

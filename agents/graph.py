@@ -17,12 +17,12 @@ from typing import Optional
 from langgraph.graph import END, StateGraph
 from typing_extensions import TypedDict
 
-from agents.agents.handoff import handoff_coordinator
-from agents.agents.intake import intake_agent
-from agents.agents.pattern import pattern_agent
-from agents.agents.resource import resource_agent
-from agents.agents.routing import routing_agent
-from agents.agents.vulnerability import vulnerability_agent
+from agents.handoff import handoff_coordinator
+from agents.intake import intake_agent
+from agents.pattern import pattern_agent
+from agents.resource import resource_agent
+from agents.routing import routing_agent
+from agents.vulnerability import vulnerability_agent
 from utils.helpers import get_logger
 
 logger = get_logger("emma.graph")

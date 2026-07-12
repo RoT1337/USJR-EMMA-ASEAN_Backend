@@ -7,8 +7,8 @@ This is the final LLM call before the result goes back to Earl's dashboard.
 """
 import json
 
-from ..utils.claude import MODEL, get_claude_client
-from ..utils.helpers import clamp_confidence, get_logger, parse_llm_json
+from utils.claude import MODEL, get_claude_client
+from utils.helpers import clamp_confidence, get_logger, parse_llm_json
 
 logger = get_logger(__name__)
 

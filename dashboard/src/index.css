@@ -1495,3 +1495,529 @@ body {
   letter-spacing: 0.06em;
   animation: introFadeUp 0.6s 1.6s both;
 }
+
+/* ── Login screen ──────────────────────────────────────────── */
+.login-root {
+  position: fixed;
+  inset: 0;
+  background: var(--ground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 24px;
+  z-index: 9999;
+}
+
+.login-card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(15, 28, 46, 0.10);
+  padding: 24px 26px 20px;
+  display: flex;
+  flex-direction: column;
+  animation: introFadeUp 0.5s 0.05s both;
+}
+
+.login-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.login-brand-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+.login-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--alert);
+  background: var(--alert-bg);
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  border-radius: 99px;
+  padding: 3px 10px;
+}
+
+.login-lead {
+  margin: 14px 0 16px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.login-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.login-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.login-label-block { display: block; margin-bottom: 7px; }
+
+.login-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.login-role {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 11px;
+  background: var(--raised);
+  border: 1.5px solid var(--rim);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.login-role:hover { border-color: var(--muted); }
+.login-role-active { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
+.login-role-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
+.login-role-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.login-role-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.login-role-org {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.login-role-tier {
+  flex-shrink: 0;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.login-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+.login-submit:hover { filter: brightness(0.92); transform: translateY(-1px); }
+.login-submit:active { transform: translateY(0); }
+
+.login-foot {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Role chip (header role indicator + switcher) ──────────── */
+.role-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid var(--rim);
+  border-radius: 99px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 0.15s;
+  flex-shrink: 0;
+}
+.role-chip:hover { filter: brightness(0.97); }
+.role-chip-icon { font-size: 13px; line-height: 1; }
+.role-chip-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.role-chip-name { font-size: 11px; font-weight: 700; white-space: nowrap; }
+.role-chip-user {
+  font-size: 9px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.role-chip-switch {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-left: 1px solid var(--rim);
+  padding-left: 8px;
+  margin-left: 2px;
+}
+
+/* ── Shell: sidebar + content (local role views) ───────────── */
+.shell-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+.shell-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Sidebar — mirrors .agent-nav so local views and the ASEAN view share a shell */
+.side-nav {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--rim);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+.side-user {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rim);
+  margin-bottom: 10px;
+}
+.side-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.side-user-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+.side-user-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.side-user-role {
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-groups { flex: 1; }
+.side-group { margin-bottom: 10px; }
+.side-group-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 14px 6px;
+}
+.side-group-chevron { font-size: 11px; opacity: 0.6; }
+
+.side-item {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  padding: 5px 14px;
+  border-left: 3px solid transparent;
+  line-height: 1.4;
+  cursor: default;
+}
+.side-item-active {
+  font-weight: 600;
+}
+
+.side-foot {
+  font-size: 8.5px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  padding: 10px 14px 0;
+  border-top: 1px solid var(--rim-soft);
+  margin-top: 8px;
+}
+
+/* ── Breadcrumb strip ──────────────────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rim);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.breadcrumb-home { color: var(--muted); }
+.breadcrumb-sep  { color: var(--rim); }
+.breadcrumb-current { color: var(--text-dim); font-weight: 600; }
+
+/* ── Dashboard layout (local role views) ───────────────────── */
+.dash-body {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px 20px;
+  min-height: 0;
+  align-items: flex-start;
+}
+.dash-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dash-aside {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+}
+
+/* ── StatCard ──────────────────────────────────────────────── */
+/* six across on a desktop demo screen, wrapping gracefully below that */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+  gap: 10px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-left: 3px solid var(--rim);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  min-width: 0;
+}
+.stat-card-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.stat-card-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.stat-card-unit {
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 3px;
+  opacity: 0.75;
+}
+.stat-card-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.stat-card-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.stat-card-arrow { font-size: 8px; }
+.stat-trend-up   { color: var(--fail); }
+.stat-trend-down { color: var(--pass); }
+
+/* ── DataTable ─────────────────────────────────────────────── */
+.data-table-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.data-table-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--rim);
+}
+.data-table-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.data-table-caption {
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.data-table-scroll { overflow-x: auto; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  background: var(--raised);
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--rim);
+  white-space: nowrap;
+}
+.data-table td {
+  font-size: 12px;
+  color: var(--text);
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--rim-soft);
+  line-height: 1.45;
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--raised); }
+.data-cell-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.data-table-empty {
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  padding: 20px 14px;
+}
+
+/* ── AgentPanel extras (chrome comes from .agent-card) ─────── */
+.agent-panel-headline {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.45;
+}
+.agent-panel-detail {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.agent-panel-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rim);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ── Phase 1 placeholder (remove after Phase 3) ────────────── */
+.pending-region {
+  background: var(--surface);
+  border: 1px dashed var(--rim);
+  border-radius: 8px;
+  padding: 22px 16px;
+  text-align: center;
+}
+.pending-region-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+.pending-region-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .dash-aside { width: 280px; }
+}
+@media (max-width: 900px) {
+  /* the nav tree is cosmetic — drop it rather than crowd the data */
+  .side-nav { display: none; }
+  .dash-body { flex-direction: column; }
+  .dash-aside { width: 100%; position: static; }
+}
+@media (max-width: 640px) {
+  .login-fields { grid-template-columns: 1fr; }
+  .login-card { padding: 20px 18px 16px; }
+  .dash-body { padding: 12px 12px 16px; }
+  .breadcrumb { padding: 8px 12px; }
+  .role-chip-body, .role-chip-switch { display: none; }
+  .role-chip { padding: 6px 9px; }
+}

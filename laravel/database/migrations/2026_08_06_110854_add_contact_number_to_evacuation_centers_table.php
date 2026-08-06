@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_pregnant')->default(false);
+        Schema::table('evacuation_centers', function (Blueprint $table) {
+            $table->string('contact_number')->nullable()->after('longitude');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('is_pregnant');
+        Schema::table('evacuation_centers', function (Blueprint $table) {
+            $table->dropColumn('contact_number');
         });
     }
 };

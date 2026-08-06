@@ -13,7 +13,7 @@ class EvacuationCenterSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('evacuation_centers')->truncate(); // Clear existing data
+        DB::table('evacuation_centers')->delete(); // Clear existing data
 
         DB::table('evacuation_centers')->insert([
             [

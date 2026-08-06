@@ -51,13 +51,15 @@ async function runDemo() {
   })
   const page = await context.newPage()
 
-  // ── 0:00 — Open dashboard, show intro screen ────────────────────────────
+  // ── 0:00 — Open dashboard, show login screen ────────────────────────────
   await page.goto('http://localhost:5173')
   await page.waitForLoadState('networkidle')
   await page.waitForTimeout(2500)
 
-  // ── Click through intro screen, let health banner settle ─────────────────
-  await page.locator('.intro-cta').click()
+  // ── Sign in as ASEAN Regional, let health banner settle ──────────────────
+  await page.locator('.login-role', { hasText: 'ASEAN Regional Coordinator' }).click()
+  await page.waitForTimeout(600)
+  await page.locator('.login-submit').click()
   await page.waitForTimeout(800)
 
   // ── Fill form fields ─────────────────────────────────────────────────────

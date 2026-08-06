@@ -1942,7 +1942,7 @@ body {
 .data-table td {
   font-size: 12px;
   color: var(--text);
-  padding: 9px 14px;
+  padding: 6px 14px;
   border-bottom: 1px solid var(--rim-soft);
   line-height: 1.45;
 }
@@ -1951,12 +1951,228 @@ body {
 .data-cell-mono {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
+  white-space: nowrap;
 }
 .data-table-empty {
   color: var(--muted);
   font-style: italic;
   text-align: center;
   padding: 20px 14px;
+}
+
+/* composed cells */
+.cell-stack { display: flex; flex-direction: column; gap: 1px; }
+.cell-primary { font-size: 12px; color: var(--text); font-weight: 500; }
+.cell-sub { font-size: 10px; color: var(--muted); line-height: 1.35; }
+
+.cell-progress { display: flex; align-items: center; gap: 7px; }
+.cell-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--rim);
+  border-radius: 2px;
+  overflow: hidden;
+  min-width: 40px;
+}
+.cell-progress-fill { height: 100%; border-radius: 2px; }
+.cell-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.cell-short,
+.cell-ok {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.cell-short { color: var(--fail); font-weight: 700; }
+.cell-ok    { color: var(--text-dim); }
+
+.dash-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ── Forecast strip (DRRMO) ────────────────────────────────── */
+.forecast-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 12px 14px;
+}
+.forecast-lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 14px;
+  border-right: 1px solid var(--rim);
+  flex-shrink: 0;
+}
+.forecast-lead-icon { font-size: 28px; line-height: 1; }
+.forecast-lead-place { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.forecast-lead-cond  { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.forecast-lead-temp {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--alert);
+  letter-spacing: -0.02em;
+}
+
+.forecast-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.forecast-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 2px;
+  border-radius: 6px;
+}
+.forecast-day-now { background: var(--alert-bg); }
+.forecast-day-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.forecast-day-now .forecast-day-label { color: var(--alert); }
+.forecast-day-icon { font-size: 16px; line-height: 1; }
+.forecast-day-temps { display: flex; gap: 4px; align-items: baseline; }
+.forecast-hi { font-size: 11px; font-weight: 700; color: var(--text); }
+.forecast-lo { font-size: 10px; color: var(--muted); }
+.forecast-rain-track {
+  width: 100%;
+  height: 22px;
+  background: var(--rim-soft);
+  border-radius: 3px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.forecast-rain-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #38BDF8, #0284C7);
+  border-radius: 3px;
+}
+.forecast-rain-mm {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  color: var(--muted);
+}
+
+/* ── Weather map (DRRMO) ───────────────────────────────────── */
+.weather-map-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+.weather-map-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+.map-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.map-toggle {
+  display: flex;
+  border: 1px solid var(--rim);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.map-toggle-btn {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: none;
+  border-right: 1px solid var(--rim);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.map-toggle-btn:last-child { border-right: none; }
+.map-toggle-btn:hover:not(:disabled) { background: var(--raised); }
+.map-toggle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.map-toggle-active,
+.map-toggle-active:hover { background: var(--alert) !important; color: #fff; }
+
+.weather-map-body { position: relative; }
+.weather-map-body .leaflet-container {
+  background: var(--rim-soft);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* evacuation-center pins — divIcons, so no bundler-broken PNG paths */
+.ec-pin {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  vertical-align: middle;
+}
+.ec-pin-wrap { background: none; border: none; }
+
+.map-nokey {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 500;
+  background: var(--fail-bg);
+  border: 1px solid #FECACA;
+  color: var(--fail);
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.weather-map-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  border-top: 1px solid var(--rim);
+  background: var(--raised);
+}
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.map-legend-src {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* ── AgentPanel extras (chrome comes from .agent-card) ─────── */
@@ -1979,28 +2195,6 @@ body {
   border-top: 1px solid var(--rim);
   font-size: 10px;
   color: var(--muted);
-}
-
-/* ── Phase 1 placeholder (remove after Phase 3) ────────────── */
-.pending-region {
-  background: var(--surface);
-  border: 1px dashed var(--rim);
-  border-radius: 8px;
-  padding: 22px 16px;
-  text-align: center;
-}
-.pending-region-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-}
-.pending-region-hint {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 5px;
-  line-height: 1.5;
 }
 
 /* ── Responsive ────────────────────────────────────────────── */

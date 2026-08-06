@@ -1,0 +1,262 @@
+================================================================================
+EMMA — THINGS WORTH NOTING
+Collated 2026-08-07, after Phase 3 (all four views built)
+Draft due Aug 8 · Finalize Aug 9 · Hard submit morning of Aug 10
+================================================================================
+
+Ordered by what could actually hurt you. Section A is demo-day risk, B is
+decisions I could not make for you, C is known gaps, D is things that are fine
+but you should know about.
+
+
+================================================================================
+A. DEMO-DAY RISKS  — read this section before you present
+================================================================================
+
+A1. LARAVEL "localhost" vs "127.0.0.1"                     [FIXED, but re-check]
+--------------------------------------------------------------------------------
+Symptom : You start both backends, the agent service works, Laravel does not.
+          Submitting a situation report fails at the very first step.
+Cause   : `localhost` resolves to IPv6 ::1 first on Windows. Laravel (php artisan
+          serve) binds to IPv4 127.0.0.1 only. The browser tries ::1 and fails.
+Fix     : dashboard/.env → VITE_LARAVEL_BASE_URL=http://127.0.0.1:8000
+Verify  : Open the dashboard, browser console, run:  window.EMMA.probe()
+          Both rows must say reachable=yes. Takes five seconds.
+
+          ^ DO THIS BEFORE YOU GO ON STAGE. The health banner in the header only
+            checks the agent service (:8001). A dead Laravel stays invisible
+            until someone clicks Submit, which is the worst time to find out.
+
+
+A2. WEATHER OVERLAY MAY LOOK EMPTY                              [NEEDS DECISION]
+--------------------------------------------------------------------------------
+The OpenWeatherMap key works — verified, real tiles, HTTP 200, 15/15 loaded, no
+failures. But the default layer is `precipitation_new`, which only paints where
+rain is actually falling right now. On a clear day over Cebu the overlay is
+CORRECTLY rendering nothing, and the map just looks like a plain street map.
+
+This is the single biggest "looks broken but isn't" risk in the demo.
+
+Options (pick one during polish):
+  (a) Default the layer toggle to Clouds instead of Rain. Clouds are almost
+      always present, so something always shows. Least effort, most reliable.
+  (b) Default the scope to Philippines or ASEAN rather than Alcoy — wider area
+      means more chance of visible weather somewhere.
+  (c) Raise tile opacity from 0.6 and/or use a muted basemap so the overlay has
+      contrast. Right now light overlay on light OSM tiles is genuinely faint
+      even when data IS present.
+  (d) Check the actual weather the morning of the demo and set the default to
+      whatever looks best that day.
+
+Recommendation: (a) + (c). Takes ten minutes and removes the risk entirely.
+
+
+A3. THE PIPELINE TAKES ~16 SECONDS                                  [BUDGETING]
+--------------------------------------------------------------------------------
+Measured end to end with a real report: 16.4s from Submit to Human Gate.
+Your ASEAN segment is budgeted at 45 seconds. That is a third of the segment
+spent watching skeletons.
+
+Options: pre-submit before the segment starts and switch to an already-populated
+screen; or narrate over the loading state (the staggered agent skeletons are
+genuinely good-looking and reinforce "five agents working"); or shorten the
+report text, which is the main driver of latency.
+
+Also note: agent cards stagger in over ~1250ms AFTER results arrive. Do not
+switch away the instant the gate appears — the later cards are still animating.
+
+
+A4. NO OFFLINE FALLBACK FOR THE MAP                                  [ACCEPTED]
+--------------------------------------------------------------------------------
+The map needs internet for both OSM and OpenWeatherMap tiles. Venue wifi is a
+real risk. CLAUDE.md already anticipated this — the documented fallback is a
+static screenshot of the weather map. If you want that safety net, capture the
+screenshot in advance and keep it ready to swap in. Not built.
+
+
+================================================================================
+B. DECISIONS I COULD NOT MAKE FOR YOU
+================================================================================
+
+B1. CONFIDENCE BADGE COLOUR — TWO RULES IN PLAY
+--------------------------------------------------------------------------------
+CLAUDE.md states: 80+ green, 60-79 amber, below 60 red.
+AgentCard.jsx (the existing ASEAN component) ignores that and colours the badge
+by AGENT ACCENT instead (Intake blue, Vulnerability amber, Resource violet...).
+
+I followed the written rule for the three local AgentPanels. Consequence: on
+screen, EMMA-Warn shows a GREEN 91% badge on an orange card, while the ASEAN
+agents show accent-coloured badges. Slightly inconsistent between tiers.
+
+All three local agents are 80+ (91 / 88 / 84), so they all read green — the
+amber and red tiers never appear in the demo.
+
+To switch: pass tintByConfidence={false} to AgentPanel in all three views.
+Your call. Neither option is wrong; they just can't both be right.
+
+
+B2. "AID PACKAGES READY = 174" MAY INVITE A QUESTION
+--------------------------------------------------------------------------------
+On DSWD, that card sits next to "Households Validated 87" and "Total
+Beneficiaries 340". 174 = 87 AICS packages + 87 food packs, i.e. two programs
+for the same 87 households. Internally correct, but a judge scanning quickly may
+wonder why it is roughly double 87.
+
+If you would rather it read cleanly at a glance, change it to 87 ("households
+with a package ready"). One line in dataSource.js.
+
+
+B3. HUMANGATE HAS A DEAD PROP
+--------------------------------------------------------------------------------
+HumanGate.jsx receives a `handoff` prop and never renders it. The CSS for the
+block it was meant to show (.humangate-summary, .humangate-action,
+.humangate-reasoning, .humangate-confidence) still exists in index.css, orphaned.
+This is a pre-existing lint error, not something introduced this sprint.
+
+Functionally harmless: the Handoff agent card sits directly above the gate and
+already shows the same action and reasoning, so restoring the block would
+duplicate what is on screen.
+
+Two clean options: wire it up (accepting duplication), or drop the prop and the
+orphaned CSS. I did not touch it because CLAUDE.md says do not modify the ASEAN
+pipeline. Tell me which and it is a two-minute change.
+
+
+B4. "VIEW ALL →" CARD FOOTERS AND THE SIDEBAR SEARCH BOX
+--------------------------------------------------------------------------------
+Both appear on every old EMMA screenshot. I left both out — they are dead
+affordances in a mock, and CLAUDE.md says not to add features beyond what is
+listed. If you want them purely for screenshot fidelity, say so; they are
+cosmetic and quick.
+
+
+================================================================================
+C. KNOWN GAPS
+================================================================================
+
+C1. PRE-EXISTING LINT ERRORS (4) — none introduced this sprint
+--------------------------------------------------------------------------------
+  AgentCard.jsx:82       'meta' assigned but never used
+  AgentPipeline.jsx:38   'visibleAgents' assigned but never used
+  AgentPipeline.jsx:75   'state' assigned but never used
+  HumanGate.jsx:3        'handoff' defined but never used   (see B3)
+  + 1 warning: AgentPipeline useEffect missing 'agentStates' dependency
+
+All are dead code rather than live bugs — the app runs correctly. Cheap to clear
+if you want a clean lint run, but they touch ASEAN pipeline files.
+
+
+C2. RESPONSIVE BELOW 900px IS UNTESTED IN ANGER
+--------------------------------------------------------------------------------
+The sidebar hides below 900px and the right rail stacks below the main column.
+That logic exists but I have only verified the desktop demo size (1600x900) and
+the layout at 1440x900. If you plan to show anything on a phone or tablet, it
+needs a real pass. The demo itself is desktop, so this is low priority.
+
+
+C3. NO TESTS ON THE DASHBOARD
+--------------------------------------------------------------------------------
+The agents/ service has 46 passing tests. The dashboard has none. Given the
+deadline this is a deliberate omission, not an oversight — but the mock data
+consistency validator (below) covers the thing most likely to break silently.
+
+
+C4. MOBILE APP IS OUT OF SCOPE HERE
+--------------------------------------------------------------------------------
+Your presentation budget has a "Mobile + Web overview" segment at 0:30. Nothing
+in this sprint touched a mobile app. Make sure that segment is covered by
+something that exists.
+
+
+================================================================================
+D. THINGS THAT ARE FINE, BUT WORTH KNOWING
+================================================================================
+
+D1. MOCK DATA CANNOT SILENTLY DRIFT
+--------------------------------------------------------------------------------
+src/data/mockData.js derives every headline total from SCENARIO rather than
+repeating numbers. validateMockData() runs 12 cross-view invariants on import in
+dev and warns in the browser console if the story stops reconciling.
+
+It has already caught two real drifts during the build (a stale "2 fund requests
+· P1.295M" string, and two peso formatters disagreeing on the same figure).
+
+If you edit the numbers, WATCH THE CONSOLE. A red [EMMA mockData] warning means
+a judge could catch you.
+
+Anchor figures, for reference:
+  340 residents · 87 families · Brgy. Nug-as, Alcoy, Cebu · Typhoon Kalmaegi
+  2 pregnant · 1 PWD (wheelchair) · 4 elderly 75+ · 3 infants
+  Active EC occupancy sums to exactly 340 against 700 capacity
+  Registry: 93 submitted = 87 validated + 3 duplicates + 3 pending
+
+
+D2. GOING LIVE FOR A LOCAL VIEW IS A ONE-FUNCTION CHANGE
+--------------------------------------------------------------------------------
+No view imports mockData.js. They all go through src/data/dataSource.js, whose
+getters are already async and already return API-shaped responses. To make DSWD
+live, replace the body of getDswdData() with a fetch that returns the same
+shape. No view changes, no hook changes — the loading and error branches are
+already written and wired.
+
+Hand dataSource.js to whoever writes the backend endpoints. Those return shapes
+ARE the contract.
+
+There is also a VITE_DATA_SOURCE env flag reserved for per-view cutover.
+
+
+D3. BACKEND DEBUGGING TOOLS THAT EXIST NOW
+--------------------------------------------------------------------------------
+  window.EMMA.probe()   pings both services, prints a table (see A1)
+  window.EMMA.urls      shows which URLs the dashboard is actually using
+  Console logging       every request/response is logged with service tag and
+                        timing; set VITE_DEBUG_API=false to silence
+  Error messages        name the service, the URL and the likely fix, e.g.
+                        "cannot reach agents at http://localhost:8001/health —
+                         is the service running on :8001? (also check CORS)"
+                        rather than a bare "Network Error"
+  Timeouts              15s Laravel, 120s agents
+
+
+D4. SECURITY — .env IS NOW GITIGNORED
+--------------------------------------------------------------------------------
+dashboard/.env was TRACKED by git with no ignore rule, and your OpenWeatherMap
+key was sitting in it as an uncommitted change on a repo with a public GitHub
+remote. One `git add -A` from being published.
+
+Verified the key was never actually committed (git log -S across all branches),
+so no history rewrite and no key rotation were needed. Now untracked and
+ignored.
+
+ONE THING TO TELL YOUR TEAMMATES: when you commit this, anyone who pulls will
+have their local dashboard/.env deleted, because the file is leaving the repo.
+They copy .env.example to .env and refill it. Say this in the PR description or
+someone loses ten minutes.
+
+
+D5. VERIFIED, NOT ASSUMED
+--------------------------------------------------------------------------------
+Everything below was checked in a real browser, not inferred:
+  · All four views render, role switching works, zero console errors
+  · Live pipeline: 5 agents online, full run 16.4s, all 6 agents populated
+    (98 / 80 / 78 / 82 / 92 / 87), Human Gate rendered
+  · Qdrant retrieval works — Pattern agent surfaced "Typhoon Odette,
+    2021-12-16, Alcoy, Cebu" and flagged westward tracking to Vietnam in 5-7
+    days, which is the cross-border narrative appearing on its own
+  · The agents correctly extracted every anchor figure from prose: 340
+    residents, 87 families, 2 pregnant, 1 wheelchair, 4 elderly, 3 infants
+  · Weather map: 15 OSM + 15 OpenWeatherMap tiles, 0 failures, 5 pins placed
+  · Build passes; no new lint errors introduced
+
+
+================================================================================
+SUGGESTED ORDER FOR THE POLISH PASS
+================================================================================
+  1. A2  weather overlay visibility          — biggest visual risk, ~10 min
+  2. B1  confidence badge decision           — one prop, affects three views
+  3. B2  "174" stat card decision            — one line
+  4. B3  HumanGate dead prop                 — two minutes once you decide
+  5. A3  rehearse the 16s pipeline wait      — no code, just timing
+  6. C1  clear pre-existing lint             — optional, cosmetic
+  7. A4  capture the static map fallback     — insurance against venue wifi
+================================================================================

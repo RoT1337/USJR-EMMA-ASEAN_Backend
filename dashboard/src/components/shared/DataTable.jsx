@@ -39,10 +39,22 @@ export function StatusPill({ value }) {
 }
 
 /**
- * columns: [{ key, label, align?: 'left'|'right', width?: string, pill?: boolean, mono?: boolean }]
+ * columns: [{ key, label, align?, width?, pill?, mono?, render? }]
+ *   pill   — render the value as a StatusPill
+ *   mono   — monospace cell (ids, figures)
+ *   render — (row) => node, for composed cells; wins over pill/mono
  * rows:    [{ [key]: value, ... }]  — an optional `accent` on a row tints its left edge.
+ * rowKey:  field name or (row, i) => key. Defaults to the row index, because a
+ *          domain id is not necessarily unique per row — a DSWD family id is
+ *          shared by every member of that family, and again by its duplicates.
  */
-export default function DataTable({ title, caption, columns, rows, emptyText = 'No records' }) {
+export default function DataTable({ title, caption, columns, rows, rowKey, emptyText = 'No records' }) {
+  const keyFor = (row, i) => {
+    if (typeof rowKey === 'function') return rowKey(row, i)
+    if (typeof rowKey === 'string') return row[rowKey]
+    return i
+  }
+
   return (
     <div className="data-table-card">
       {(title || caption) && (
@@ -73,14 +85,18 @@ export default function DataTable({ title, caption, columns, rows, emptyText = '
               </tr>
             )}
             {rows.map((row, i) => (
-              <tr key={row.id ?? i} style={row.accent ? { boxShadow: `inset 3px 0 0 ${row.accent}` } : undefined}>
+              <tr key={keyFor(row, i)} style={row.accent ? { boxShadow: `inset 3px 0 0 ${row.accent}` } : undefined}>
                 {columns.map(c => (
                   <td
                     key={c.key}
                     style={{ textAlign: c.align ?? 'left' }}
                     className={c.mono ? 'data-cell-mono' : undefined}
                   >
-                    {c.pill ? <StatusPill value={row[c.key]} /> : row[c.key]}
+                    {c.render
+                      ? c.render(row)
+                      : c.pill
+                        ? <StatusPill value={row[c.key]} />
+                        : row[c.key]}
                   </td>
                 ))}
               </tr>

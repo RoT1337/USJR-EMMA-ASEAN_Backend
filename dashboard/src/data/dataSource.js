@@ -64,7 +64,9 @@ export async function getDswdData() {
     stats: [
       { key: 'validated',   label: 'Households Validated', value: r.validated,             accent: 'pass',    sub: `of ${r.submitted} submitted` },
       { key: 'duplicates',  label: 'Duplicates Flagged',   value: r.duplicates,            accent: 'fail'     },
-      { key: 'packages',    label: 'Aid Packages Ready',   value: d.packagesReady,         accent: 'neutral'  },
+      /* 174 = two active programs staged for the same 87 households. Without the
+         sub-line it reads as an unexplained ~2x of every other figure on screen. */
+      { key: 'packages',    label: 'Aid Packages Ready',   value: d.packagesReady,         accent: 'neutral', sub: `AICS + food packs · ${r.validated} HH each` },
       { key: 'disbursements', label: 'Pending Disbursements', value: d.pendingDisbursements, accent: 'amber'  },
       { key: 'beneficiaries', label: 'Total Beneficiaries', value: mock.SCENARIO.residentsAffected, accent: 'violet' },
       { key: 'pwdSenior',   label: 'PWD / Senior Assisted', value: mock.PWD_SENIOR_ASSISTED, accent: 'alert'  },

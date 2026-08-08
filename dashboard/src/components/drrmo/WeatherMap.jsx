@@ -14,17 +14,43 @@ import 'leaflet/dist/leaflet.css'
 
 const OWM_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
+/* Basemap is CartoDB Dark Matter. OpenWeatherMap's raster tiles are pale, low
+   contrast, and semi-transparent — on a light basemap (OSM or Positron) they wash
+   out to near-invisible, which is the "map looks broken" problem. On a dark
+   basemap the same tiles glow, which is exactly why every radar and ops weather
+   display is dark. This is a map surface, not UI chrome, so it does not conflict
+   with the light design system around it. No key needed. */
+const BASEMAP = {
+  url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+}
+
+/* Ordered by how reliably they show SOMETHING, because an empty overlay reads as
+   a broken map even when it is behaving correctly:
+     clouds  — cloud cover exists essentially always
+     temp    — a full colour field over every pixel, never blank
+     wind    — near-always present offshore
+     rain    — the most on-narrative, but blank when it is not raining
+   Default is clouds, not rain, for that reason. */
 const LAYERS = [
-  { id: 'precipitation_new', label: 'Rain' },
   { id: 'clouds_new',        label: 'Clouds' },
+  { id: 'temp_new',          label: 'Temp' },
   { id: 'wind_new',          label: 'Wind' },
+  { id: 'precipitation_new', label: 'Rain' },
 ]
 
+/* OpenWeatherMap tiles are a coarse global raster. Past roughly zoom 8 a single
+   tile covers the whole viewport, so it renders as flat colour or nothing at all
+   — which is why the overlay looks dead at barangay zoom. Default scope is
+   therefore Philippines, where the weather system actually has shape.
+   Alcoy sits at zoom 10 rather than 11 to keep some of that structure visible. */
 const SCOPES = [
-  { id: 'alcoy',  label: 'Alcoy',       center: [9.7167, 123.5167], zoom: 11 },
-  { id: 'ph',     label: 'Philippines', center: [12.8797, 121.7740], zoom: 6 },
-  { id: 'asean',  label: 'ASEAN',       center: [8.0, 115.0],        zoom: 4 },
+  { id: 'ph',     label: 'Philippines', center: [12.8797, 121.7740], zoom: 6  },
+  { id: 'asean',  label: 'ASEAN',       center: [8.0, 115.0],        zoom: 4  },
+  { id: 'alcoy',  label: 'Alcoy',       center: [9.7167, 123.5167],  zoom: 10 },
 ]
+
+const OVERLAY_OPACITY = 0.8
 
 /* Occupancy drives the pin colour, same thresholds as the LGU occupancy bars. */
 function pinColor(center) {
@@ -58,8 +84,8 @@ function ScopeController({ scope }) {
 }
 
 export default function WeatherMap({ centers, height = 320 }) {
-  const [layer, setLayer] = useState('precipitation_new')
-  const [scope, setScope] = useState('alcoy')
+  const [layer, setLayer] = useState(LAYERS[0].id)
+  const [scope, setScope] = useState(SCOPES[0].id)
 
   const initial = SCOPES[0]
 
@@ -102,16 +128,13 @@ export default function WeatherMap({ centers, height = 320 }) {
           style={{ height: '100%', width: '100%' }}
           scrollWheelZoom={false}
         >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution="&copy; OpenStreetMap contributors"
-          />
+          <TileLayer url={BASEMAP.url} attribution={BASEMAP.attribution} />
 
           {OWM_KEY && (
             <TileLayer
               key={layer}
               url={`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`}
-              opacity={0.6}
+              opacity={OVERLAY_OPACITY}
               attribution="&copy; OpenWeatherMap"
             />
           )}

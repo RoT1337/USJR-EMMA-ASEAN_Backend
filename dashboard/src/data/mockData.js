@@ -305,6 +305,14 @@ export function validateMockData() {
     `Pregnant rows != VULNERABILITY.pregnant (${VULNERABILITY.pregnant})`,
   )
   check(
+    activePrograms.every(p => p.packages === REGISTRY_TOTALS.validated),
+    `Every active aid program should stage one package per validated household (${REGISTRY_TOTALS.validated})`,
+  )
+  check(
+    DERIVED.packagesReady === activePrograms.length * REGISTRY_TOTALS.validated,
+    `packagesReady (${DERIVED.packagesReady}) != ${activePrograms.length} active programs x ${REGISTRY_TOTALS.validated} households`,
+  )
+  check(
     barangayRisk.reduce((n, b) => n + b.families, 0) === SCENARIO.familiesAffected,
     `Families across barangays != SCENARIO.familiesAffected (${SCENARIO.familiesAffected})`,
   )

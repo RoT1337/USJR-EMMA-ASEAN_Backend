@@ -4,6 +4,27 @@ Running log of build changes. Newest entry at the top.
 
 ---
 
+## 2026-08-08 · Polish — A2 weather overlay, B2 stat consistency
+
+Acting on Rob's responses to `NOTES.txt`. Three resolved, three deferred to the ASEAN rework.
+
+**A2 — weather overlay now actually visible** (was the biggest "looks broken but isn't" risk)
+- **Basemap → CartoDB Dark Matter.** This was the real fix. OWM tiles are pale and semi-transparent; on light basemaps they wash out, on dark they glow — same reason radar displays are dark. Map surface, not UI chrome, so no second design language.
+- Default layer **Clouds, not Rain** — rain only paints where it's actually raining; clouds always exist and render as dramatic banded structure on dark
+- Default scope **Philippines, not Alcoy**; layers reordered by reliability (Clouds, Temp, Wind, Rain); opacity 0.6→0.8; Alcoy zoom 11→10
+- Compared all four layers against both basemaps before choosing — findings recorded in NOTES so nobody repeats it
+- Rob's point about local zoom confirmed **unfixable**: OWM tiles are a coarse global raster, past ~zoom 8 one tile covers the viewport. Reframed instead — wide scope = weather is the story, local scope = pins are the story
+
+**A4 — fallback image captured** → `dashboard/public/weather-map-fallback.png`, 2x for projector, taken while tiles were confirmed live. Usable as a slide asset now; auto-swap-on-tile-failure not wired.
+
+**B2 — "Aid Packages Ready = 174"** resolved by *disclosure*, not by changing the number (174 is correct — two programs for the same 87 households; showing 87 would be less true). Card now reads `174 / AICS + food packs · 87 HH each`, plus **two new invariants** pinning the relationship. 14 invariants, all passing.
+
+**Deferred to the ASEAN rework** — B1 (badge rule), B3 (HumanGate dead prop), C1 (4 lint errors). All ASEAN-side, and Rob wants ASEAN delivery reworked to be automatic and fed from old EMMA. One conversation, not three tasks.
+
+**Verified** — all 14 invariants pass; DSWD stat row renders the new sub-line; map tiles 10 basemap + 10 OWM, 0 failures, 5 pins visible on dark at both scopes; lint and build clean; dev server stopped afterwards.
+
+---
+
 ## 2026-08-07 · Phase 3c — DRRMO view · Phase 3 complete
 
 **`DrrmoView.jsx`** — layout from `oldEMMA_DRRMO.jpg`: 6 stat cards → forecast strip → weather map → barangay risk → incidents. Agent panel + active advisories in the rail.

@@ -1,12 +1,29 @@
 ================================================================================
 EMMA — THINGS WORTH NOTING
 Collated 2026-08-07, after Phase 3 (all four views built)
+Updated  2026-08-08 with Rob's decisions — see STATUS on each item
 Draft due Aug 8 · Finalize Aug 9 · Hard submit morning of Aug 10
 ================================================================================
 
 Ordered by what could actually hurt you. Section A is demo-day risk, B is
 decisions I could not make for you, C is known gaps, D is things that are fine
 but you should know about.
+
+--------------------------------------------------------------------------------
+STATUS AT A GLANCE (2026-08-08)
+--------------------------------------------------------------------------------
+  A1  Laravel localhost/127.0.0.1 ........ RESOLVED (re-verify before demo)
+  A2  Weather overlay visibility .......... RESOLVED — dark basemap + clouds
+  A3  16s pipeline vs 45s segment ......... OPEN, rehearsal item, no code
+  A4  Offline map fallback ................ PARTLY DONE — image captured, unwired
+  B1  Confidence badge rule ............... DEFERRED — tied to ASEAN rework
+  B2  "Aid Packages Ready = 174" .......... RESOLVED — disclosed + invariant added
+  B3  HumanGate dead prop ................. DEFERRED — ASEAN component
+  B4  "View All" / search affordances ..... OPEN, cosmetic
+  C1  4 pre-existing lint errors .......... DEFERRED — all in ASEAN files
+  C2  Responsive below 900px .............. OPEN, low priority (desktop demo)
+  C3  No dashboard tests .................. ACCEPTED
+  C4  Mobile segment coverage ............. OPEN — not a code item, check it
 
 
 ================================================================================
@@ -28,27 +45,50 @@ Verify  : Open the dashboard, browser console, run:  window.EMMA.probe()
             until someone clicks Submit, which is the worst time to find out.
 
 
-A2. WEATHER OVERLAY MAY LOOK EMPTY                              [NEEDS DECISION]
+A2. WEATHER OVERLAY MAY LOOK EMPTY                       [RESOLVED 2026-08-08]
 --------------------------------------------------------------------------------
-The OpenWeatherMap key works — verified, real tiles, HTTP 200, 15/15 loaded, no
-failures. But the default layer is `precipitation_new`, which only paints where
-rain is actually falling right now. On a clear day over Cebu the overlay is
-CORRECTLY rendering nothing, and the map just looks like a plain street map.
+Was: default layer `precipitation_new` only paints where rain is actually
+falling, so on a clear day over Cebu the map looked like a plain street map.
+Compounded by pale OWM tiles over a full-colour OSM basemap.
 
-This is the single biggest "looks broken but isn't" risk in the demo.
+Rob's call: show something rather than just a map — pick the most visually
+striking option.
 
-Options (pick one during polish):
-  (a) Default the layer toggle to Clouds instead of Rain. Clouds are almost
-      always present, so something always shows. Least effort, most reliable.
-  (b) Default the scope to Philippines or ASEAN rather than Alcoy — wider area
-      means more chance of visible weather somewhere.
-  (c) Raise tile opacity from 0.6 and/or use a muted basemap so the overlay has
-      contrast. Right now light overlay on light OSM tiles is genuinely faint
-      even when data IS present.
-  (d) Check the actual weather the morning of the demo and set the default to
-      whatever looks best that day.
+FIXED, by testing all four layers against two basemaps and comparing:
+  · Basemap  → CartoDB Dark Matter. This was the real fix. OWM tiles are pale
+               and semi-transparent; on a light basemap they wash out, on dark
+               they glow. Same reason every radar and ops weather display is
+               dark. It is a map surface, not UI chrome, so it does not
+               introduce a second design language.
+  · Layer    → defaults to Clouds, not Rain. Cloud cover exists essentially
+               always, and on dark it renders as dramatic banded structure that
+               reads instantly as a satellite view.
+  · Scope    → defaults to Philippines, not Alcoy (see the zoom note below).
+  · Opacity  → 0.6 to 0.8.
+  · Order    → layers are listed by how reliably they show SOMETHING:
+               Clouds, Temp, Wind, Rain. Temp never renders blank at all, so it
+               is the guaranteed fallback if clouds ever disappoint.
 
-Recommendation: (a) + (c). Takes ten minutes and removes the risk entirely.
+What I found testing the others, so you do not have to repeat it:
+  Temp on light  — flat tan wash; the tropics are uniformly warm, so no structure
+  Wind on light  — pastel purple, some structure, still weak
+  Wind on dark   — muddy purple-grey, worse than clouds
+  Clouds on dark — clearly the winner
+
+ON YOUR POINT ABOUT LOCAL ZOOM: you are right and it cannot be fixed. OWM tiles
+are a coarse global raster; past roughly zoom 8 one tile covers the viewport, so
+it renders as flat colour with no structure. That is a property of the free tile
+service, not our code.
+
+The division that actually works for the demo:
+  wide scope  (Philippines / ASEAN) → the WEATHER is the story
+  local scope (Alcoy)               → the PINS are the story, evacuation centres
+                                      colour-coded by occupancy, red = 90%+ full
+Alcoy sits at zoom 10 rather than 11 to retain a little structure.
+
+Suggested narration beat: open on Philippines with the cloud field, then hit
+"Alcoy" — the map flies in and the story narrows from the region to the barangay
+in one gesture. That is your whole local-to-regional narrative in three seconds.
 
 
 A3. THE PIPELINE TAKES ~16 SECONDS                                  [BUDGETING]
@@ -66,19 +106,35 @@ Also note: agent cards stagger in over ~1250ms AFTER results arrive. Do not
 switch away the instant the gate appears — the later cards are still animating.
 
 
-A4. NO OFFLINE FALLBACK FOR THE MAP                                  [ACCEPTED]
+A4. NO OFFLINE FALLBACK FOR THE MAP                    [PARTLY DONE 2026-08-08]
 --------------------------------------------------------------------------------
-The map needs internet for both OSM and OpenWeatherMap tiles. Venue wifi is a
-real risk. CLAUDE.md already anticipated this — the documented fallback is a
-static screenshot of the weather map. If you want that safety net, capture the
-screenshot in advance and keep it ready to swap in. Not built.
+The map needs internet for both basemap and OpenWeatherMap tiles. Venue wifi is
+a real risk.
+
+YOUR QUESTION: "Does this 'screenshot' mean I'll just take a screenshot of the
+map?" — Yes, that is exactly what CLAUDE.md meant. But you should not have to
+take it manually, and you should not take it on demo day when the wifi is the
+thing that just failed.
+
+DONE: captured while the tiles were confirmed live, at 2x for projector:
+    dashboard/public/weather-map-fallback.png
+Philippines scope, clouds layer, dark basemap, all 5 evacuation pins in frame.
+
+You can use it two ways:
+  (a) As a slide asset — drop it straight into the deck. Nothing to wire.
+  (b) As an automatic in-app fallback — not built. Would mean detecting tile
+      load failures and swapping the live map for the image. Perhaps 20 minutes.
+      Say the word if you want it.
+
+Re-capture it if the map design changes, otherwise the fallback will not match
+what the live view looks like.
 
 
 ================================================================================
 B. DECISIONS I COULD NOT MAKE FOR YOU
 ================================================================================
 
-B1. CONFIDENCE BADGE COLOUR — TWO RULES IN PLAY
+B1. CONFIDENCE BADGE COLOUR — TWO RULES IN PLAY               [DEFERRED — ASEAN]
 --------------------------------------------------------------------------------
 CLAUDE.md states: 80+ green, 60-79 amber, below 60 red.
 AgentCard.jsx (the existing ASEAN component) ignores that and colours the badge
@@ -86,40 +142,68 @@ by AGENT ACCENT instead (Intake blue, Vulnerability amber, Resource violet...).
 
 I followed the written rule for the three local AgentPanels. Consequence: on
 screen, EMMA-Warn shows a GREEN 91% badge on an orange card, while the ASEAN
-agents show accent-coloured badges. Slightly inconsistent between tiers.
+agents show accent-coloured badges. Inconsistent BETWEEN tiers.
 
-All three local agents are 80+ (91 / 88 / 84), so they all read green — the
-amber and red tiers never appear in the demo.
+ONE CORRECTION to how this was framed, since it affected your call: this is not
+purely an ASEAN item. It touches both — the three local panels are ours to
+change freely, and only the mismatch against ASEAN is constrained. The three
+local views ARE already consistent with each other (all 80+, all green), so
+nothing looks wrong within the local tier.
 
-To switch: pass tintByConfidence={false} to AgentPanel in all three views.
-Your call. Neither option is wrong; they just can't both be right.
+DEFERRED per Rob 2026-08-08: the ASEAN component is getting reworked anyway —
+delivery should become automatic and driven from old EMMA rather than manual
+input — and that is a large change. Settling badge colour before that lands
+would be premature. Revisit once the ASEAN delivery model is decided.
+
+When you do: pass tintByConfidence={false} to AgentPanel in all three views to
+match AgentCard, or leave as-is to match the written spec.
 
 
-B2. "AID PACKAGES READY = 174" MAY INVITE A QUESTION
+B2. "AID PACKAGES READY = 174" MAY INVITE A QUESTION      [RESOLVED 2026-08-08]
 --------------------------------------------------------------------------------
-On DSWD, that card sits next to "Households Validated 87" and "Total
-Beneficiaries 340". 174 = 87 AICS packages + 87 food packs, i.e. two programs
-for the same 87 households. Internally correct, but a judge scanning quickly may
-wonder why it is roughly double 87.
+Was: on DSWD, that card sat next to "Households Validated 87" and "Total
+Beneficiaries 340" with no explanation for why it is roughly double 87.
 
-If you would rather it read cleanly at a glance, change it to 87 ("households
-with a package ready"). One line in dataSource.js.
+Rob's call: no inconsistencies, even in mock data.
+
+FIXED, by disclosure rather than by changing the number — 174 is genuinely
+correct (two active programs staged for the same 87 households), so hiding it
+behind "87" would have made the card less true, not more consistent.
+
+  · The card now carries a sub-line: "AICS + food packs · 87 HH each"
+    On screen: AID PACKAGES READY / 174 / AICS + food packs · 87 HH each
+    Nothing to wonder about, and no information lost.
+
+  · Two new invariants in validateMockData() make it structural, so the
+    relationship cannot silently drift later:
+      - every active aid program stages exactly one package per validated
+        household
+      - packagesReady === active programs x validated households
+    14 invariants now, all passing.
+
+That is the general pattern for this class of problem: if a number is right but
+reads oddly, explain it on screen and pin it with an invariant. Do not round it
+off to something less true.
 
 
-B3. HUMANGATE HAS A DEAD PROP
+B3. HUMANGATE HAS A DEAD PROP                                 [DEFERRED — ASEAN]
 --------------------------------------------------------------------------------
+CONFIRMING YOUR QUESTION: yes, HumanGate is purely ASEAN. HumanGate.jsx is
+imported by AseanView.jsx and nowhere else. The three local dashboards do not
+use it at all.
+
 HumanGate.jsx receives a `handoff` prop and never renders it. The CSS for the
 block it was meant to show (.humangate-summary, .humangate-action,
 .humangate-reasoning, .humangate-confidence) still exists in index.css, orphaned.
-This is a pre-existing lint error, not something introduced this sprint.
+Pre-existing, not introduced this sprint.
 
 Functionally harmless: the Handoff agent card sits directly above the gate and
 already shows the same action and reasoning, so restoring the block would
-duplicate what is on screen.
+duplicate what is already on screen.
 
-Two clean options: wire it up (accepting duplication), or drop the prop and the
-orphaned CSS. I did not touch it because CLAUDE.md says do not modify the ASEAN
-pipeline. Tell me which and it is a two-minute change.
+DEFERRED per Rob 2026-08-08, until the ASEAN presentation approach is settled.
+Sensible — how the gate should present is part of that same question. Revisit
+alongside B1 and C1.
 
 
 B4. "VIEW ALL →" CARD FOOTERS AND THE SIDEBAR SEARCH BOX
@@ -134,7 +218,7 @@ cosmetic and quick.
 C. KNOWN GAPS
 ================================================================================
 
-C1. PRE-EXISTING LINT ERRORS (4) — none introduced this sprint
+C1. PRE-EXISTING LINT ERRORS (4)                              [DEFERRED — ASEAN]
 --------------------------------------------------------------------------------
   AgentCard.jsx:82       'meta' assigned but never used
   AgentPipeline.jsx:38   'visibleAgents' assigned but never used
@@ -142,8 +226,11 @@ C1. PRE-EXISTING LINT ERRORS (4) — none introduced this sprint
   HumanGate.jsx:3        'handoff' defined but never used   (see B3)
   + 1 warning: AgentPipeline useEffect missing 'agentStates' dependency
 
-All are dead code rather than live bugs — the app runs correctly. Cheap to clear
-if you want a clean lint run, but they touch ASEAN pipeline files.
+All four are in ASEAN component files, which is why you deferred them — correct
+call, they should be cleared as part of that rework rather than piecemeal.
+
+All are dead code rather than live bugs; the app runs correctly. Everything
+written this sprint lints clean.
 
 
 C2. RESPONSIVE BELOW 900px IS UNTESTED IN ANGER
@@ -250,13 +337,31 @@ Everything below was checked in a real browser, not inferred:
 
 
 ================================================================================
-SUGGESTED ORDER FOR THE POLISH PASS
+WHAT IS LEFT
 ================================================================================
-  1. A2  weather overlay visibility          — biggest visual risk, ~10 min
-  2. B1  confidence badge decision           — one prop, affects three views
-  3. B2  "174" stat card decision            — one line
-  4. B3  HumanGate dead prop                 — two minutes once you decide
-  5. A3  rehearse the 16s pipeline wait      — no code, just timing
-  6. C1  clear pre-existing lint             — optional, cosmetic
-  7. A4  capture the static map fallback     — insurance against venue wifi
+
+BLOCKED ON THE ASEAN REWORK — do not touch piecemeal
+  B1  confidence badge rule
+  B3  HumanGate dead prop / how the gate presents
+  C1  the 4 lint errors (all in ASEAN files)
+  These three are one conversation, not three tasks. The open design question
+  is Rob's: ASEAN delivery should be automatic and fed from old EMMA rather
+  than a manual situation-report textarea. Settle that first.
+
+NO CODE NEEDED, JUST YOU
+  A3  rehearse the 16.4s pipeline against the 45s ASEAN segment
+  C4  confirm the 0:30 "Mobile + Web overview" segment is covered by something
+  A1  run window.EMMA.probe() before going on stage
+
+SMALL AND OPTIONAL
+  A4  wire the captured fallback image to auto-swap on tile failure (~20 min)
+  B4  "View All" footers and sidebar search, purely for screenshot fidelity
+  C2  responsive below 900px, only matters if you show a phone or tablet
+
+NEXT SESSION: polishing and refurbishing the web app — Rob's call on where.
+
+(Rob's Personal Notes. Claude may edit)
+-> Consider a dark mode toggle
+-> For DRRMO, default should be Alcoy. Is there a way we can go to the point of municipal level? 
+-> How do we make it seem seemless? From each major dashboard, it's a human assigned to it. There should information passing from lowest to highest level.
 ================================================================================

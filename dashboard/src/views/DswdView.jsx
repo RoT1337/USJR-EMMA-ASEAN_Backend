@@ -71,7 +71,7 @@ const INVENTORY_COLUMNS = [
   { key: 'status', label: '', pill: true, width: '92px' },
 ]
 
-export default function DswdView({ role, onSwitchRole }) {
+export default function DswdView({ role, onSwitchRole, visited }) {
   const { data, loading, error } = useDashboardData(role.id)
 
   if (error) {
@@ -91,6 +91,7 @@ export default function DswdView({ role, onSwitchRole }) {
     <DashboardShell
       role={role}
       onSwitchRole={onSwitchRole}
+      visited={visited}
       aside={
         <>
           <AgentPanel

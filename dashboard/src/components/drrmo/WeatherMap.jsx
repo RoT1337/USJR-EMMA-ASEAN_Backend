@@ -14,16 +14,26 @@ import 'leaflet/dist/leaflet.css'
 
 const OWM_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY
 
-/* Basemap is CartoDB Dark Matter. OpenWeatherMap's raster tiles are pale, low
-   contrast, and semi-transparent — on a light basemap (OSM or Positron) they wash
-   out to near-invisible, which is the "map looks broken" problem. On a dark
-   basemap the same tiles glow, which is exactly why every radar and ops weather
-   display is dark. This is a map surface, not UI chrome, so it does not conflict
-   with the light design system around it. No key needed. */
-const BASEMAP = {
-  url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+/* The basemap follows the scope, because the two scopes are doing different jobs.
+
+   REGIONAL — dark. OpenWeatherMap's tiles are pale, semi-transparent and low
+   contrast; on a light basemap they wash out to near-invisible, which is the
+   "map looks broken" problem. On dark they glow, which is why every radar and
+   ops weather display is dark.
+
+   LOCAL — light. The weather overlay is dimmed to near-nothing at municipal zoom
+   anyway (it carries no information there), so dark stops buying anything and
+   starts costing legibility: CartoDB's dark tiles go almost black over rural
+   terrain at zoom 13, hiding the coast road and street layout that actually
+   matter when you are looking at evacuation centres.
+
+   Both are CARTO basemaps, no key needed. A map surface is not UI chrome, so
+   neither conflicts with the light design system around it. */
+const BASEMAPS = {
+  regional: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  local:    'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
 }
+const BASEMAP_ATTRIBUTION = '&copy; OpenStreetMap contributors &copy; CARTO'
 
 /* Ordered by how reliably they show SOMETHING, because an empty overlay reads as
    a broken map even when it is behaving correctly:
@@ -39,18 +49,28 @@ const LAYERS = [
   { id: 'precipitation_new', label: 'Rain' },
 ]
 
-/* OpenWeatherMap tiles are a coarse global raster. Past roughly zoom 8 a single
-   tile covers the whole viewport, so it renders as flat colour or nothing at all
-   — which is why the overlay looks dead at barangay zoom. Default scope is
-   therefore Philippines, where the weather system actually has shape.
-   Alcoy sits at zoom 10 rather than 11 to keep some of that structure visible. */
+/* Scope order walks OUTWARD — Alcoy, then Philippines, then ASEAN — mirroring the
+   escalation chain. Opening wide and flying in would be top-down and fights the
+   bottom-to-top narrative the whole demo is built on.
+
+   OpenWeatherMap tiles are a coarse global raster: past roughly zoom 8 a single
+   tile covers the viewport, so at barangay zoom the overlay is flat colour
+   carrying no information. Rather than show dead weight, the overlay fades right
+   down at local scope and the evacuation pins carry the view.
+
+     Weather is regional context. Pins are local truth. */
 const SCOPES = [
+  /* zoom 13 frames the municipality itself — Alcoy town, the coast road and the
+     upland barangays — with the evacuation pins spread rather than clustered.
+     The basemap goes to zoom 19, so tighter framing is available if wanted;
+     only the weather overlay has a useful ceiling. */
+  { id: 'alcoy',  label: 'Alcoy',       center: [9.7100, 123.5020],  zoom: 13, local: true },
   { id: 'ph',     label: 'Philippines', center: [12.8797, 121.7740], zoom: 6  },
   { id: 'asean',  label: 'ASEAN',       center: [8.0, 115.0],        zoom: 4  },
-  { id: 'alcoy',  label: 'Alcoy',       center: [9.7167, 123.5167],  zoom: 10 },
 ]
 
-const OVERLAY_OPACITY = 0.8
+const OVERLAY_OPACITY       = 0.8
+const OVERLAY_OPACITY_LOCAL = 0.15
 
 /* Occupancy drives the pin colour, same thresholds as the LGU occupancy bars. */
 function pinColor(center) {
@@ -88,6 +108,7 @@ export default function WeatherMap({ centers, height = 320 }) {
   const [scope, setScope] = useState(SCOPES[0].id)
 
   const initial = SCOPES[0]
+  const isLocal = SCOPES.find(s => s.id === scope)?.local ?? false
 
   return (
     <div className="weather-map-card">
@@ -128,13 +149,17 @@ export default function WeatherMap({ centers, height = 320 }) {
           style={{ height: '100%', width: '100%' }}
           scrollWheelZoom={false}
         >
-          <TileLayer url={BASEMAP.url} attribution={BASEMAP.attribution} />
+          <TileLayer
+            key={isLocal ? 'local' : 'regional'}
+            url={isLocal ? BASEMAPS.local : BASEMAPS.regional}
+            attribution={BASEMAP_ATTRIBUTION}
+          />
 
           {OWM_KEY && (
             <TileLayer
               key={layer}
               url={`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${OWM_KEY}`}
-              opacity={OVERLAY_OPACITY}
+              opacity={isLocal ? OVERLAY_OPACITY_LOCAL : OVERLAY_OPACITY}
               attribution="&copy; OpenWeatherMap"
             />
           )}
@@ -165,7 +190,13 @@ export default function WeatherMap({ centers, height = 320 }) {
         <span className="map-legend-item"><span className="ec-pin" style={{ background: '#D97706' }} /> 60–89%</span>
         <span className="map-legend-item"><span className="ec-pin" style={{ background: '#DC2626' }} /> 90%+ full</span>
         <span className="map-legend-item"><span className="ec-pin" style={{ background: '#8FA3BA' }} /> standby</span>
-        <span className="map-legend-src">{OWM_KEY ? 'OpenWeatherMap live tiles' : 'no weather key'}</span>
+        <span className="map-legend-src">
+          {!OWM_KEY
+            ? 'no weather key'
+            : isLocal
+              ? 'local scope — pins carry the view'
+              : 'OpenWeatherMap live tiles'}
+        </span>
       </div>
     </div>
   )

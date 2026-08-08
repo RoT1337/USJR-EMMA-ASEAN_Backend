@@ -10,17 +10,23 @@ decisions I could not make for you, C is known gaps, D is things that are fine
 but you should know about.
 
 --------------------------------------------------------------------------------
-STATUS AT A GLANCE (2026-08-08)
+STATUS AT A GLANCE (updated 2026-08-08, after Phase 4)
 --------------------------------------------------------------------------------
   A1  Laravel localhost/127.0.0.1 ........ RESOLVED (re-verify before demo)
   A2  Weather overlay visibility .......... RESOLVED — dark basemap + clouds
-  A3  16s pipeline vs 45s segment ......... OPEN, rehearsal item, no code
+                                            (scope direction reversed in Phase 4)
+  A3  Pipeline vs 45s segment ............. ⚠ WORSE — now 29.9s. READ THIS ONE.
   A4  Offline map fallback ................ PARTLY DONE — image captured, unwired
-  B1  Confidence badge rule ............... DEFERRED — tied to ASEAN rework
+                                            (needs re-capture, map changed)
+  A5  Cross-border insight is not ......... LLM variance, see below
+      guaranteed
+  A6  Pre-submitting does not survive ..... ⚠ NEW — breaks your A3 plan (a).
+      a role switch                         Use two browser windows.
+  B1  Confidence badge rule ............... RESOLVED — one rule, both tiers
   B2  "Aid Packages Ready = 174" .......... RESOLVED — disclosed + invariant added
-  B3  HumanGate dead prop ................. DEFERRED — ASEAN component
+  B3  HumanGate dead prop ................. RESOLVED — prop and CSS dropped
   B4  "View All" / search affordances ..... OPEN, cosmetic
-  C1  4 pre-existing lint errors .......... DEFERRED — all in ASEAN files
+  C1  Pre-existing lint errors ............ RESOLVED — zero errors, zero warnings
   C2  Responsive below 900px .............. OPEN, low priority (desktop demo)
   C3  No dashboard tests .................. ACCEPTED
   C4  Mobile segment coverage ............. OPEN — not a code item, check it
@@ -63,8 +69,13 @@ FIXED, by testing all four layers against two basemaps and comparing:
   · Layer    → defaults to Clouds, not Rain. Cloud cover exists essentially
                always, and on dark it renders as dramatic banded structure that
                reads instantly as a satellite view.
-  · Scope    → defaults to Philippines, not Alcoy (see the zoom note below).
-  · Opacity  → 0.6 to 0.8.
+  · Scope    → REVERSED IN PHASE 4. Now defaults to Alcoy and the toggle walks
+               OUTWARD: Alcoy → Philippines → ASEAN, mirroring the escalation
+               chain. Opening wide and flying in was top-down and fought the
+               bottom-to-top narrative. At Alcoy the overlay drops to 0.15
+               opacity because it carries no information at that zoom, and the
+               evacuation pins carry the view instead — the legend says so.
+  · Opacity  → 0.6 to 0.8 at regional scope, 0.15 at local.
   · Order    → layers are listed by how reliably they show SOMETHING:
                Clouds, Temp, Wind, Rain. Temp never renders blank at all, so it
                is the guaranteed fallback if clouds ever disappoint.
@@ -91,19 +102,86 @@ Suggested narration beat: open on Philippines with the cloud field, then hit
 in one gesture. That is your whole local-to-regional narrative in three seconds.
 
 
-A3. THE PIPELINE TAKES ~16 SECONDS                                  [BUDGETING]
+A3. THE PIPELINE NOW TAKES ~30 SECONDS              [⚠ GOT WORSE IN PHASE 4]
 --------------------------------------------------------------------------------
-Measured end to end with a real report: 16.4s from Submit to Human Gate.
-Your ASEAN segment is budgeted at 45 seconds. That is a third of the segment
-spent watching skeletons.
+Measured, both on real runs against the live service:
 
-Options: pre-submit before the segment starts and switch to an already-populated
-screen; or narrate over the loading state (the staggered agent skeletons are
-genuinely good-looking and reinforce "five agents working"); or shorten the
-report text, which is the main driver of latency.
+    short hand-typed report (~350 chars) ....... 16.4s
+    auto-composed SITREP  (1,092 chars) ........ 29.9s
 
-Also note: agent cards stagger in over ~1250ms AFTER results arrive. Do not
-switch away the instant the gate appears — the later cards are still animating.
+Phase 4a made the demo path use the auto-composed SITREP, so 29.9s is now the
+number that matters. Against a 45-second ASEAN segment that is TWO THIRDS of the
+segment spent watching skeletons. This is the biggest open demo risk.
+
+The cause is confirmed, not guessed: report length drives latency, because every
+one of the five agents processes the full text. The Phase 4 SITREP is roughly 3x
+longer than the report I originally timed, and the runtime scaled with it.
+
+Options, cheapest first:
+  (a) Pre-submit before the segment starts, present an already-populated screen.
+      Costs nothing, removes the risk entirely, and the escalation beat still
+      works — you click Escalate, the SITREP appears prefilled, and you cut to
+      the processed view.
+  (b) Trim the SITREP. It is editable in the textarea, so the presenter can cut
+      it live, or I can shorten composeSitrepText() in escalation.js. Every
+      anchor figure has to survive the cut or the invariants break. Say the word.
+  (c) Narrate over the loading state. The staggered skeletons genuinely look
+      good and reinforce "five agents working" — but 30s is a long silence.
+
+I did NOT shorten it unilaterally, because the length is what makes it read as a
+real institutional document rather than a demo string, and that trade is yours.
+
+Also note: agent cards stagger in over ~1250ms AFTER results arrive. Do not cut
+away the instant the gate appears — the later cards are still animating.
+
+
+A6. PRE-SUBMITTING DOES NOT SURVIVE A ROLE SWITCH        [⚠ AFFECTS YOUR A3 PLAN]
+--------------------------------------------------------------------------------
+You chose A3 option (a): pre-submit before the segment, present an already
+populated screen. I tested whether that actually works. It does not, as-is.
+
+App.jsx renders the active view with key={roleId}, and signing out renders the
+login screen instead. So leaving the ASEAN view UNMOUNTS it — pipeline results,
+report text, human-gate state, all gone. Verified directly: typed a marker into
+the ASEAN textarea, switched to LGU, switched back, field was empty.
+
+So "process it early, then come back to it later in the demo" silently resets,
+and you would discover that on stage.
+
+Three ways out:
+
+  (i)  TWO BROWSER WINDOWS — zero code, zero risk. Park window A on the ASEAN
+       view with the pipeline already processed. Run the DRRMO → DSWD → LGU walk
+       in window B, click Submit SITREP to show the prefill and provenance, then
+       alt-tab to window A for the processed result. Recommended this close to
+       submission.
+
+  (ii) LIFT THE PIPELINE STATE into App.jsx so the ASEAN view survives role
+       switches. Perhaps 20-30 minutes. It touches AseanView, which has been
+       stable since Phase 1, so it carries some regression risk right before a
+       deadline. Ask if you want it — it is the clean fix, just not the safe one
+       three days out.
+
+  (iii) DO IT LIVE and narrate over the ~30s. The staggered skeletons look good
+       and reinforce "five agents working", but it is a long silence.
+
+Related, same cause: a browser REFRESH resets everything — visited seats, the
+escalation payload, pipeline results. Do not hit F5 mid-demo.
+
+
+A5. THE CROSS-BORDER INSIGHT IS NOT GUARANTEED                          [NEW]
+--------------------------------------------------------------------------------
+On one run the Pattern agent surfaced "Typhoon systems affecting Cebu can track
+westward to Vietnam within 5-7 days (Kalmaegi precedent)" entirely unprompted —
+which is the ASEAN narrative appearing on its own, and is genuinely impressive.
+
+On a later run with the auto-composed SITREP, the same field returned
+"None identified".
+
+This is normal LLM variance, not a bug. Do not build the narration around that
+sentence appearing. If it shows up, point at it — it is a strong moment. If it
+does not, the Qdrant prior-event retrieval ("Typhoon Odette, 2021-12-16, Alcoy,
+Cebu") has been stable across every run and carries the same point.
 
 
 A4. NO OFFLINE FALLBACK FOR THE MAP                    [PARTLY DONE 2026-08-08]
@@ -126,8 +204,12 @@ You can use it two ways:
       load failures and swapping the live map for the image. Perhaps 20 minutes.
       Say the word if you want it.
 
-Re-capture it if the map design changes, otherwise the fallback will not match
-what the live view looks like.
+RE-CAPTURED 2026-08-08 at Alcoy scope, matching the new Phase 4 default. The
+earlier version was taken at Philippines scope and no longer matched the live
+view on load.
+
+Re-capture again if the map design changes — a fallback that does not match the
+live view is worse than none, because the switch is visible.
 
 
 ================================================================================
@@ -150,13 +232,18 @@ change freely, and only the mismatch against ASEAN is constrained. The three
 local views ARE already consistent with each other (all 80+, all green), so
 nothing looks wrong within the local tier.
 
-DEFERRED per Rob 2026-08-08: the ASEAN component is getting reworked anyway —
-delivery should become automatic and driven from old EMMA rather than manual
-input — and that is a large change. Settling badge colour before that lands
-would be premature. Revisit once the ASEAN delivery model is decided.
+RESOLVED in Phase 4e — one rule, both tiers. AgentCard now colours its badge and
+confidence bar by the same 80/60 thresholds AgentPanel uses.
 
-When you do: pass tintByConfidence={false} to AgentPanel in all three views to
-match AgentCard, or leave as-is to match the written spec.
+Why that direction rather than the other: the badge previously repeated the agent
+accent, which the card's border, title colour and icon already carry three times
+over. Colouring by confidence makes it say something the card does not otherwise
+say.
+
+It earns its keep immediately. On the verification run the six agents returned
+95 / 80 / 72 / 82 / 92 / 87 — so Resource renders AMBER against five greens. An
+operator scanning before approving at the Human Gate now sees at a glance which
+agent was least certain. That is real signal, and it was invisible before.
 
 
 B2. "AID PACKAGES READY = 174" MAY INVITE A QUESTION      [RESOLVED 2026-08-08]
@@ -201,9 +288,14 @@ Functionally harmless: the Handoff agent card sits directly above the gate and
 already shows the same action and reasoning, so restoring the block would
 duplicate what is already on screen.
 
-DEFERRED per Rob 2026-08-08, until the ASEAN presentation approach is settled.
-Sensible — how the gate should present is part of that same question. Revisit
-alongside B1 and C1.
+RESOLVED in Phase 4e — dropped, not wired. The `handoff` prop is gone from both
+HumanGate.jsx and its call site in AseanView.jsx, and the four orphaned CSS rules
+were removed from index.css.
+
+Dropping rather than wiring because the Handoff card sits immediately above the
+gate and already shows the same action and reasoning in full. Restating it would
+duplicate on-screen content and cost vertical space in a view that is already the
+longest of the four.
 
 
 B4. "VIEW ALL →" CARD FOOTERS AND THE SIDEBAR SEARCH BOX
@@ -218,19 +310,23 @@ cosmetic and quick.
 C. KNOWN GAPS
 ================================================================================
 
-C1. PRE-EXISTING LINT ERRORS (4)                              [DEFERRED — ASEAN]
+C1. PRE-EXISTING LINT ERRORS                             [RESOLVED 2026-08-08]
 --------------------------------------------------------------------------------
-  AgentCard.jsx:82       'meta' assigned but never used
-  AgentPipeline.jsx:38   'visibleAgents' assigned but never used
-  AgentPipeline.jsx:75   'state' assigned but never used
-  HumanGate.jsx:3        'handoff' defined but never used   (see B3)
-  + 1 warning: AgentPipeline useEffect missing 'agentStates' dependency
+All cleared in Phase 4e. `npx eslint src/` now reports ZERO errors and ZERO
+warnings across the whole codebase, for the first time in the project.
 
-All four are in ASEAN component files, which is why you deferred them — correct
-call, they should be cleared as part of that rework rather than piecemeal.
+  AgentCard.jsx:82       'meta' unused ................. removed
+  AgentPipeline.jsx:38   'visibleAgents' unused ........ removed (dead filter)
+  AgentPipeline.jsx:75   'state' unused ................ removed
+  HumanGate.jsx:3        'handoff' unused .............. removed (see B3)
+  AgentPipeline useEffect missing dependency ........... restructured
 
-All are dead code rather than live bugs; the app runs correctly. Everything
-written this sprint lints clean.
+ONE OF THESE WAS NOT COSMETIC. The `agentStates` dependency warning was hiding a
+real defect: the reveal effect read agentStates but did not depend on it, and it
+created setTimeout timers with no cleanup. Adding the dependency would have
+restacked timers on every reveal; the fix was to schedule off the AGENTS constant
+instead, and to clear the timers on unmount. That removes an actual leak — the
+old code left up to six timers running if you navigated away mid-pipeline.
 
 
 C2. RESPONSIVE BELOW 900px IS UNTESTED IN ANGER
@@ -337,31 +433,41 @@ Everything below was checked in a real browser, not inferred:
 
 
 ================================================================================
-WHAT IS LEFT
+WHAT IS LEFT  (after Phase 4)
 ================================================================================
 
-BLOCKED ON THE ASEAN REWORK — do not touch piecemeal
-  B1  confidence badge rule
-  B3  HumanGate dead prop / how the gate presents
-  C1  the 4 lint errors (all in ASEAN files)
-  These three are one conversation, not three tasks. The open design question
-  is Rob's: ASEAN delivery should be automatic and fed from old EMMA rather
-  than a manual situation-report textarea. Settle that first.
+The ASEAN rework that was blocking B1 / B3 / C1 has happened — Phase 4 made the
+report arrive by escalation instead of being typed, and all three are cleared.
+
+DECIDE THIS ONE — the only real risk left
+  A3  the demo path now takes 29.9s against a 45s segment. Pick (a) pre-submit,
+      (b) let me trim the SITREP, or (c) narrate over it. Measurements in A3.
+      I did not choose for you: trimming trades away the length that makes the
+      SITREP read as a real institutional document.
 
 NO CODE NEEDED, JUST YOU
-  A3  rehearse the 16.4s pipeline against the 45s ASEAN segment
-  C4  confirm the 0:30 "Mobile + Web overview" segment is covered by something
   A1  run window.EMMA.probe() before going on stage
+  A5  do not script the cross-border line — it does not appear every run
+  C4  confirm the 0:30 "Mobile + Web overview" segment is covered by something
 
 SMALL AND OPTIONAL
   A4  wire the captured fallback image to auto-swap on tile failure (~20 min)
   B4  "View All" footers and sidebar search, purely for screenshot fidelity
   C2  responsive below 900px, only matters if you show a phone or tablet
 
-NEXT SESSION: polishing and refurbishing the web app — Rob's call on where.
+DEMO PATH AS IT NOW STANDS
+  Log in as DRRMO   → strip shows Field ● DRRMO ●, inbound from Brgy. Nug-as.
+                      Map opens on Alcoy at municipal zoom; toggle outward to
+                      Philippines / ASEAN as the scope of the story widens.
+  Switch to DSWD    → inbound Hazard Advisory from J. Ramos · 3 duplicates found
+  Switch to LGU     → inbound Validated List · outbound SITREP card in the rail
+  Click ESCALATE    → lands on ASEAN, strip completes, SITREP prefilled with
+                      provenance. Nothing was typed.
+  Click Process     → 29.9s · six agents · Human Gate
 
-(Rob's Personal Notes. Claude may edit)
--> Consider a dark mode toggle
--> For DRRMO, default should be Alcoy. Is there a way we can go to the point of municipal level? 
--> How do we make it seem seemless? From each major dashboard, it's a human assigned to it. There should information passing from lowest to highest level.
+
+================================================================================
+ROB'S PERSONAL NOTES — with answers
+================================================================================
+
 ================================================================================

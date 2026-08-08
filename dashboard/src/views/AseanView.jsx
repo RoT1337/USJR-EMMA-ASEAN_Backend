@@ -6,12 +6,15 @@ import AgentPipeline from '../components/AgentPipeline'
 import AgentNav from '../components/AgentNav'
 import HumanGate from '../components/HumanGate'
 import { RoleChip } from '../components/shared/RoleHeader'
+import EscalationStrip from '../components/shared/EscalationStrip'
+import { INCIDENT_ID } from '../data/escalation'
 
 const INITIAL = { phase: 'idle', reportId: null, agentOutputs: null, error: null }
 
 /* The live five-agent pipeline. Lifted from App.jsx unchanged — only the import
-   paths, the intro gate (now the login screen) and the header chrome differ. */
-export default function AseanView({ role, onSwitchRole }) {
+   paths, the intro gate (now the login screen), the header chrome and the Phase 4
+   escalation wiring differ. */
+export default function AseanView({ role, onSwitchRole, escalation, visited }) {
   const [health, setHealth] = useState(null)
   const [healthError, setHealthError] = useState(false)
   const [state, setState] = useState(INITIAL)
@@ -107,6 +110,7 @@ export default function AseanView({ role, onSwitchRole }) {
         </div>
 
         <div className="app-header-right">
+          <span className="app-report-id">{INCIDENT_ID}</span>
           {state.reportId && (
             <span className="app-report-id">{state.reportId}</span>
           )}
@@ -116,6 +120,8 @@ export default function AseanView({ role, onSwitchRole }) {
           <RoleChip role={role} onSwitchRole={onSwitchRole} />
         </div>
       </header>
+
+      <EscalationStrip roleId="asean" hasEscalated={Boolean(escalation)} visited={visited} />
 
       {/* ── Status strips ───────────────────────────────────── */}
       {state.phase === 'submitting' && (
@@ -155,7 +161,7 @@ export default function AseanView({ role, onSwitchRole }) {
       {!showPipeline && (
         <div className="app-body">
           <div className="app-form-section">
-            <SituationReportForm onSubmit={handleSubmit} isLoading={isLoading} />
+            <SituationReportForm onSubmit={handleSubmit} isLoading={isLoading} escalation={escalation} />
           </div>
           <div className="app-empty">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="app-empty-icon">
@@ -198,7 +204,6 @@ export default function AseanView({ role, onSwitchRole }) {
 
             {showGate && state.agentOutputs?.handoff && (
               <HumanGate
-                handoff={state.agentOutputs.handoff}
                 onDecide={handleDecide}
                 isLogging={state.phase === 'logging'}
               />

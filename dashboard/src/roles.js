@@ -14,7 +14,7 @@ export const ROLES = [
     org: 'Municipal DRRMO · Alcoy, Cebu',
     breadcrumb: 'Alcoy, Cebu — DRRMO',
     tier: 'Local',
-    user: 'j.ramos',
+    user: 'j.avacena',
     dashboard: 'Hazard Monitoring & Early Warning',
     agent: {
       name: 'EMMA-Warn',
@@ -44,7 +44,7 @@ export const ROLES = [
     org: 'MSWD Alcoy · DSWD Field Office VII',
     breadcrumb: 'Alcoy, Cebu — DSWD',
     tier: 'Local',
-    user: 'm.dela.cruz',
+    user: 's.monteverde',
     dashboard: 'Welfare & Beneficiary Management',
     agent: {
       name: 'EMMA-Care',
@@ -78,7 +78,7 @@ export const ROLES = [
     org: 'Office of the Mayor · Alcoy, Cebu',
     breadcrumb: 'Alcoy, Cebu — LGU',
     tier: 'Local',
-    user: 'mayor.alcoy',
+    user: 'j.matias',
     dashboard: 'Resource Planning & Approvals',
     agent: {
       name: 'EMMA-Plan',

@@ -67,7 +67,7 @@ const ADVISORY_COLUMNS = [
   },
 ]
 
-export default function DrrmoView({ role, onSwitchRole }) {
+export default function DrrmoView({ role, onSwitchRole, visited }) {
   const { data, loading, error } = useDashboardData(role.id)
 
   if (error) {
@@ -87,6 +87,7 @@ export default function DrrmoView({ role, onSwitchRole }) {
     <DashboardShell
       role={role}
       onSwitchRole={onSwitchRole}
+      visited={visited}
       aside={
         <>
           <AgentPanel

@@ -688,37 +688,8 @@ body {
   color: var(--fail);
   font-family: 'Space Grotesk', sans-serif;
 }
-.humangate-summary {
-  background: var(--fail-bg);
-  border-radius: 6px;
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  border-left: 3px solid var(--fail);
-}
-.humangate-action {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 6px;
-  line-height: 1.5;
-}
-.humangate-reasoning {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.65;
-  margin-bottom: 8px;
-}
-.humangate-confidence {
-  display: inline-flex;
-  align-items: center;
-  background: var(--fail);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  padding: 2px 8px;
-  border-radius: 5px;
-}
+/* .humangate-summary / -action / -reasoning / -confidence removed in Phase 4e —
+   the gate no longer restates the Handoff card that sits directly above it. */
 .humangate-note { margin-bottom: 12px; }
 .humangate-label {
   display: block;
@@ -1606,9 +1577,18 @@ body {
   min-width: 0;
 }
 .login-role-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--text);
+}
+.login-role-seen {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pass);
+  line-height: 1;
 }
 .login-role-org {
   font-size: 10px;
@@ -1813,6 +1793,276 @@ body {
 .breadcrumb-home { color: var(--muted); }
 .breadcrumb-sep  { color: var(--rim); }
 .breadcrumb-current { color: var(--text-dim); font-weight: 600; }
+.breadcrumb-incident {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--raised);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+/* ── Escalation strip (Phase 4b) ───────────────────────────── */
+.esc-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 20px;
+  background: var(--raised);
+  border-bottom: 1px solid var(--rim);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.esc-strip-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.esc-chain { display: flex; align-items: center; flex: 1; min-width: 0; flex-wrap: wrap; }
+.esc-node-wrap { display: flex; align-items: center; }
+.esc-link {
+  width: 20px;
+  height: 2px;
+  background: var(--rim);
+  flex-shrink: 0;
+}
+.esc-link-done { background: var(--pass); }
+
+.esc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--rim);
+  border: 1.5px solid var(--rim);
+  flex-shrink: 0;
+}
+
+/* single nodes: Brgy. Nug-as, AHA Centre */
+.esc-node {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  cursor: default;
+}
+.esc-node-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.esc-node-done .esc-dot { background: var(--pass); border-color: var(--pass); }
+.esc-node-done .esc-node-label { color: var(--text-dim); }
+.esc-node-here {
+  background: var(--alert-bg);
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.28);
+}
+.esc-node-here .esc-dot { background: var(--alert); border-color: var(--alert); }
+.esc-node-here .esc-node-label { color: var(--alert); font-weight: 700; }
+
+/* municipal group: three lateral peers inside one tier */
+.esc-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+  border: 1px dashed var(--rim);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.esc-group-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.esc-seats { display: flex; align-items: center; gap: 4px; }
+.esc-seat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: default;
+}
+.esc-seat-done { color: var(--text-dim); }
+.esc-seat-done .esc-dot { background: var(--pass); border-color: var(--pass); }
+.esc-seat-here {
+  background: var(--alert-bg);
+  color: var(--alert);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(234, 88, 12, 0.28);
+}
+.esc-seat-here .esc-dot { background: var(--alert); border-color: var(--alert); }
+
+/* relay tiers we pass through but do not staff */
+.esc-node-relay {
+  border: 1px dashed var(--rim);
+  border-radius: 8px;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent, transparent 4px,
+    rgba(143, 163, 186, 0.07) 4px, rgba(143, 163, 186, 0.07) 8px
+  );
+  opacity: 0.75;
+}
+.esc-node-relay .esc-node-label { font-style: italic; }
+.esc-node-note {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-left: 1px solid var(--rim);
+  padding-left: 6px;
+  white-space: nowrap;
+}
+.esc-node-relay.esc-node-done { opacity: 1; }
+.esc-node-relay.esc-node-done .esc-node-label { color: var(--text-dim); }
+.esc-strip-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ── Inbound handoff banner (Phase 4c) ─────────────────────── */
+.handoff-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-left: 3px solid var(--muted);
+  border-radius: 8px;
+  padding: 9px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.handoff-arrow { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+.handoff-body { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.handoff-from { font-size: 12px; font-weight: 600; color: var(--text); }
+.handoff-detail { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+.handoff-meta {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Escalate action (Phase 4a) ────────────────────────────── */
+.escalate-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--alert);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s, transform 0.1s;
+  animation: ctaPulse 2.4s 1.5s ease-in-out infinite;
+}
+.escalate-btn:hover { filter: brightness(0.92); transform: translateY(-1px); }
+.escalate-btn:active { transform: translateY(0); }
+.escalate-btn-arrow { font-size: 13px; }
+
+/* ── Outbound SITREP card (LGU) ────────────────────────────── */
+.outbound-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-left: 3px solid var(--alert);
+  border-radius: 8px;
+  padding: 11px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.outbound-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.outbound-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--alert);
+}
+.outbound-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+}
+.outbound-body {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+/* ── Provenance banner (ASEAN prefill) ─────────────────────── */
+.provenance-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--alert-bg);
+  border: 1px solid rgba(234, 88, 12, 0.25);
+  border-left: 3px solid var(--alert);
+  border-radius: 7px;
+  padding: 9px 12px;
+}
+.provenance-head { display: flex; align-items: baseline; gap: 7px; }
+.provenance-arrow { font-size: 13px; color: var(--alert); flex-shrink: 0; }
+.provenance-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--alert);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.provenance-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(234, 88, 12, 0.18);
+}
+.provenance-hop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.provenance-sep { color: var(--alert); font-weight: 700; }
+.provenance-relay {
+  font-size: 9px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
 
 /* ── Dashboard layout (local role views) ───────────────────── */
 .dash-body {

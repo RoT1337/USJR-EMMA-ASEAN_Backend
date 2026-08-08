@@ -34,25 +34,22 @@ export default function AgentPipeline({ outputs, isProcessing = false }) {
     prevOutputs.current = outputs
   }, [outputs, isProcessing])
 
-  // Compute which agents to show and their step numbers
-  const visibleAgents = agentStates.filter(a => {
-    if (isProcessing) return a.hasRevealed || a.isSkeleton
-    return true // When done processing, show all
-  })
-
-  // Mark agents as revealed when processing starts
+  // Mark agents as revealed when processing starts.
+  // Schedules off the AGENTS constant rather than reading agentStates, so the
+  // effect does not need agentStates as a dependency (which would re-run it on
+  // every reveal and restack the timers). Timers are now cleared on unmount.
   useEffect(() => {
-    if (isProcessing) {
-      agentStates.forEach((agent, i) => {
-        if (!agent.hasRevealed) {
-          setTimeout(() => {
-            setAgentStates(prev => prev.map(a => 
-              a.key === agent.key ? { ...a, hasRevealed: true } : a
-            ))
-          }, i * STAGGER_DELAY)
-        }
-      })
-    }
+    if (!isProcessing) return
+
+    const timers = AGENTS.map((key, i) =>
+      setTimeout(() => {
+        setAgentStates(prev => prev.map(a =>
+          a.key === key ? { ...a, hasRevealed: true } : a
+        ))
+      }, i * STAGGER_DELAY)
+    )
+
+    return () => timers.forEach(clearTimeout)
   }, [isProcessing])
 
   // Reset on new report
@@ -71,8 +68,7 @@ export default function AgentPipeline({ outputs, isProcessing = false }) {
       <div className="pipeline-header">
         <span className="pipeline-title">Agent Pipeline</span>
         <div className="pipeline-dots">
-          {AGENTS.map((key, idx) => {
-            const state = agentStates[idx]
+          {AGENTS.map(key => {
             const hasData = outputs?.[key] !== undefined && outputs?.[key] !== null
             const isActive = isProcessing && !hasData
             return (

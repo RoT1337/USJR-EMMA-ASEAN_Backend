@@ -16,6 +16,20 @@ const AGENT_ACCENT = {
   handoff:       { border: '#DC2626', bg: '#FEF2F2', badge: '#DC2626' },
 }
 
+/* One confidence rule across both tiers (Phase 4e / NOTES B1): 80+ green,
+   60-79 amber, below 60 red — matching AgentPanel on the local dashboards.
+
+   The badge previously repeated the agent accent, which the card's border, title
+   colour and icon already carry three times over. Colouring it by confidence
+   instead makes it say something the card does not otherwise say: on a real run
+   Resource at 78% now reads amber against its neighbours' green, which is exactly
+   the signal an operator needs before approving at the Human Gate. */
+function confidenceColor(pct) {
+  if (pct >= 80) return '#059669'
+  if (pct >= 60) return '#D97706'
+  return '#DC2626'
+}
+
 /* ────────────────────────────────────────────────────────────── */
 /* Skeleton components — each agent has unique layout            */
 /* ────────────────────────────────────────────────────────────── */
@@ -79,7 +93,6 @@ function SkeletonGlow() {
 }
 
 function SkeletonCard({ agentKey }) {
-  const meta = AGENT_META[agentKey]
   const accent = AGENT_ACCENT[agentKey]
 
   const renderSkeleton = () => {
@@ -234,14 +247,14 @@ export default function AgentCard({ agentKey, data, animationDelay = 0 }) {
             <div className="agent-card-sub">{meta.sub}</div>
           </div>
         </div>
-        <div className="agent-card-badge" style={{ background: accent.badge }}>
+        <div className="agent-card-badge" style={{ background: confidenceColor(pct) }}>
           {pct}%
         </div>
       </div>
 
       {/* Confidence bar */}
       <div className="conf-bar-track">
-        <div className="conf-bar-fill" style={{ width: `${pct}%`, background: accent.badge }} />
+        <div className="conf-bar-fill" style={{ width: `${pct}%`, background: confidenceColor(pct) }} />
       </div>
 
       {/* Fields */}

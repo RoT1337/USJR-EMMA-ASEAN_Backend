@@ -1,6 +1,10 @@
 import { useState } from 'react'
 
-export default function HumanGate({ handoff, onDecide, isLogging }) {
+/* No `handoff` prop: the Handoff agent card renders directly above this gate and
+   already shows the same action and reasoning in full. Restating it here would
+   duplicate what is on screen and cost vertical space in a view that is already
+   long (NOTES B3, resolved in Phase 4e). */
+export default function HumanGate({ onDecide, isLogging }) {
   const [note, setNote] = useState('')
 
   function submit(decision) {

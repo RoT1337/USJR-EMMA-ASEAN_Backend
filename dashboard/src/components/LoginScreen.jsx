@@ -1,9 +1,13 @@
 import { useState } from 'react'
 import { ROLES, ROLE_MAP } from '../roles'
 
-export default function LoginScreen({ onLogin }) {
-  const [roleId, setRoleId] = useState('drrmo')
-  const [username, setUsername] = useState(ROLE_MAP.drrmo.user)
+/* `initialRole` returns you to the seat you had open rather than resetting to
+   DRRMO, and `visited` marks the seats already seen this session — so switching
+   roles mid-demo never loses your place. */
+export default function LoginScreen({ onLogin, visited = [], initialRole = null }) {
+  const startRole = initialRole ?? 'drrmo'
+  const [roleId, setRoleId] = useState(startRole)
+  const [username, setUsername] = useState(ROLE_MAP[startRole].user)
   const [password, setPassword] = useState('emma2026')
 
   function pickRole(id) {
@@ -70,7 +74,12 @@ export default function LoginScreen({ onLogin }) {
               >
                 <span className="login-role-icon">{r.agent.icon}</span>
                 <span className="login-role-body">
-                  <span className="login-role-name">{r.name}</span>
+                  <span className="login-role-name">
+                    {r.name}
+                    {visited.includes(r.id) && (
+                      <span className="login-role-seen" title="opened this session">✓</span>
+                    )}
+                  </span>
                   <span className="login-role-org">{r.org}</span>
                 </span>
                 <span

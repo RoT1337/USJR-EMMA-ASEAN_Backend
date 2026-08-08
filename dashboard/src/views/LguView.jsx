@@ -3,6 +3,7 @@ import StatCard, { StatRow } from '../components/shared/StatCard'
 import DataTable from '../components/shared/DataTable'
 import AgentPanel from '../components/shared/AgentPanel'
 import useDashboardData from '../data/useDashboardData'
+import { buildEscalation, SITREP_ID } from '../data/escalation'
 
 /* EMMA-Plan — The Planner.
    Layout follows oldEMMA_EvacCenters.jpg: six stat cards over one hero
@@ -82,7 +83,7 @@ const LGU_COLUMNS = [
   { key: 'status', label: '', pill: true, width: '88px' },
 ]
 
-export default function LguView({ role, onSwitchRole }) {
+export default function LguView({ role, onSwitchRole, onEscalate, visited }) {
   const { data, loading, error } = useDashboardData(role.id)
 
   if (error) {
@@ -103,6 +104,15 @@ export default function LguView({ role, onSwitchRole }) {
     <DashboardShell
       role={role}
       onSwitchRole={onSwitchRole}
+      visited={visited}
+      headerRight={
+        /* "Submit SITREP", not "Escalate to AHA Centre" — Alcoy submits to the
+           Cebu Provincial DRRMC. Only NDRRMC reports to the AHA Centre. */
+        <button className="escalate-btn" onClick={() => onEscalate(buildEscalation())}>
+          Submit SITREP
+          <span className="escalate-btn-arrow">⬆</span>
+        </button>
+      }
       aside={
         <>
           <AgentPanel
@@ -117,6 +127,20 @@ export default function LguView({ role, onSwitchRole }) {
             fields={agent.fields}
             footer="Drafted from DRRMO and DSWD inputs · 08:54"
           />
+          {/* The artifact this tier produces, named so the escalate button has
+              something concrete behind it rather than firing into the void. */}
+          <div className="outbound-card">
+            <div className="outbound-head">
+              <span className="outbound-label">Outbound · SITREP</span>
+              <span className="outbound-id">{SITREP_ID}</span>
+            </div>
+            <p className="outbound-body">
+              Composed from DRRMO hazard data and the MSWD validated list.
+              Ready for submission to the Cebu Provincial DRRMC, for onward
+              relay to NDRRMC and the AHA Centre.
+            </p>
+          </div>
+
           <DataTable
             title="Inter-LGU Coordination"
             caption={`${lgus.length} LGUs`}

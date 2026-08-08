@@ -4,6 +4,100 @@ Running log of build changes. Newest entry at the top.
 
 ---
 
+## 2026-08-08 · Session memory across role switches
+
+Rob's polish note: *"When switching to a different role, maybe keep highlighted what was previously opened?"* — applied in three places, because it mattered in all of them.
+
+- **Login returns you to your last seat.** It reset to DRRMO every time; now pre-selects the role you just left, username prefilled to match
+- **Visited seats marked** with a small green tick on the login screen
+- **The reporting chain no longer regresses** — this was the real bug underneath. `chainStateFor` computed completion purely from the current seat, so walking *backwards* un-filled the strip: DRRMO → MSWD → Mayor, then back to DRRMO, and the last two went dark as though they had never happened. Now takes a `visited` list and keeps them lit
+
+`App.jsx` tracks `visited` + `lastRole`; threaded through the three views and `AseanView`. Relay tiers and the AHA Centre deliberately still light **only** on real submission, so browsing cannot fake the chain.
+
+**Verified** — walked forward through all three seats, then backwards to DRRMO: strip still reads `[DRRMO · MSWD · Mayor]` lit with DRRMO current. Login shows 3 ticks and pre-selects correctly. Lint clean, build passes, zero console errors.
+
+### ⚠ Found while testing: pre-submitting does not survive a role switch
+
+Rob picked A3 option (a) — pre-submit, present a populated screen. **It doesn't work as-is.** `App.jsx` renders views with `key={roleId}` and signing out swaps in the login screen, so leaving the ASEAN view unmounts it and discards pipeline results. Verified directly: typed a marker into the ASEAN textarea, switched to LGU, switched back — field empty.
+
+Logged as **NOTES A6** with three options. Recommended: two browser windows (zero code, zero risk). Same cause means a browser refresh also resets everything mid-demo.
+
+---
+
+## 2026-08-08 · Phase 4 corrections — institutional accuracy
+
+Naming and provenance only. **Demo flow unchanged** — same click, same prefill, same landing, still no auto-submit.
+
+Under RA 10121 the chain is Barangay → Municipal → Provincial → Regional → NDRRMC, and under AADMER only NDRRMC submits to the AHA Centre. A municipality reporting directly to Jakarta was the one structurally wrong claim on the board.
+
+**1. LGU action renamed** — "Escalate to AHA Centre" → **"Submit SITREP"**. Alcoy submits to the Cebu Provincial DRRMC. The outbound SITREP card copy was corrected to match ("for onward relay to NDRRMC and the AHA Centre"), and "DSWD" → "MSWD" there since it's the municipal office.
+
+**2. Provenance banner carries the relay path**
+```
+⬆ SITREP-2026-1105-ALC · 07:12 · Office of the Mayor
+  Alcoy LGU → Cebu Provincial DRRMC → NDRRMC → AHA Centre
+  relayed via EMMA-Aggregate · EMMA-Report
+```
+`buildEscalation()` now carries `relayPath` and `relayAgents` rather than a single `from`.
+
+**3. Escalation strip regrouped** (the optional one — it fit)
+```
+Brgy. Nug-as ● ─ [ALCOY LGU: ●DRRMO ●MSWD ●Mayor] ⋯ Provincial ⟩ NDRRMC ⋯ AHA Centre
+                                                      (dimmed · AUTO-RELAYED)
+```
+- `STAGES` (flat 5) replaced by `CHAIN` with node kinds `single` / `group` / `relay`; `stagesCompletedFor` → `chainStateFor`
+- Municipal seats are **lateral peers in one boxed tier**, completing left to right — not three rungs
+- Relay tiers render hatched and dimmed, and **light up only after Submit**. Arriving at the ASEAN view manually does not fake the relay
+- Puts **EMMA-Aggregate** and **EMMA-Report** on screen, where they were previously only in a slide
+
+**4. SITREP body corrected** (approved after flagging). It read *"Submitted by the Office of the Mayor to the AHA Centre"* — the same wrong claim, three lines under the banner that fixes it, both in frame at once. Now **derived from `RELAY_PATH`**, so the document cannot contradict the banner above it:
+
+> "Submitted by the Office of the Mayor to the Cebu Provincial DRRMC for onward relay to NDRRMC and the AHA Centre, requesting regional augmentation."
+
+1092 → 1160 chars (+6%), negligible against the 29.9s.
+
+**5. Operator identities unified.** The same person was showing three different identities across login, sidebar and handoff banner (e.g. `j.ramos` / "James Avaceña" / "J. Ramos"). `roles.js` is now the single source — `escalation.js` derives every name through a `who(roleId)` helper and never restates one.
+
+| Role | login | sidebar | inbound banner shows |
+|---|---|---|---|
+| DRRMO | `j.avacena` | James Avaceña | — (from Kap. M. Santos) |
+| DSWD | `s.monteverde` | Shiela Monteverde | James Avaceña |
+| LGU | `j.matias` | Jason Matias | Shiela Monteverde |
+
+Side benefit: the chain is now traceable **by name**. You see James Avaceña on the DRRMO sidebar, then his name again on DSWD's inbound banner — the handoff is between people, not just offices.
+
+**Verified** — strip fills correctly at each seat, button reads "Submit SITREP", provenance shows all four hops plus both relay agents, relay tier lights only post-submit, AHA Centre highlights, SITREP no longer contains the old claim, all three identities agree across login/sidebar/chip/banner. Lint clean (zero errors, zero warnings), build passes, zero console errors.
+
+---
+
+## 2026-08-08 · Phase 4 — the escalation chain
+
+The seam is gone: the ASEAN report now **arrives** instead of being typed.
+
+**4a — auto-generated escalation.** New `src/data/escalation.js`. LGU header gets a primary **Escalate to AHA Centre** action; clicking it composes the SITREP, switches role, and lands on ASEAN with the textarea prefilled and a provenance banner. Prefill, **not** auto-submit — the Process click stays a demo beat.
+- Report text is **composed from `SCENARIO` / `VULNERABILITY` / `DERIVED`**, never hardcoded, so it stays inside the invariant system
+- SITREP not PDRA — mid-event instrument, and it matches the existing API surface
+- Manual entry still works; textarea grows 6→18 rows when prefilled so the document is actually readable
+
+**4b — escalation strip** in all four views (`DashboardShell` + `AseanView`), filling in as the demo walks up: `Field ● DRRMO ● DSWD ● LGU ● ASEAN ○`.
+
+**4c — inbound handoff banners** naming what arrived and from which human.
+
+**4d — one incident ID** `INC-2026-1105-ALC` in every breadcrumb and the ASEAN header.
+
+**4e — deferred ASEAN items cleared**
+- **B1** one confidence rule across both tiers. `AgentCard` now tints by 80/60 thresholds instead of repeating the agent accent (which its border, title and icon already carry). Earns itself immediately: on the verification run Resource returned 72% and renders **amber against five greens** — the operator can see which agent was least certain before approving
+- **B3** `handoff` prop dropped from `HumanGate` + call site, orphaned CSS removed. Dropped rather than wired: the Handoff card sits directly above and already shows the same content
+- **C1** all four lint errors cleared. **`eslint src/` is now zero errors, zero warnings** for the first time. One was not cosmetic — the `agentStates` dependency warning hid a real **timer leak**: the reveal effect created up to 6 `setTimeout`s with no cleanup. Restructured to schedule off the `AGENTS` constant and clear on unmount
+
+**Map narration reversed** (per updated CLAUDE.md) — opens on **Alcoy** and walks outward, mirroring the chain instead of fighting it. Alcoy now at zoom 13 for true municipal framing. Overlay drops to 0.15 opacity locally where it carries no information, and the **basemap is scope-aware**: dark regionally so weather glows, light locally so streets stay readable. Fallback image re-captured to match.
+
+**⚠ Demo timing regressed** — the richer auto-composed SITREP (1,092 chars) takes **29.9s** vs 16.4s for the old short report. Report length drives latency; confirmed, not guessed. Against a 45s segment that needs a decision — see NOTES A3.
+
+**Verified live** — chain walked DRRMO→DSWD→LGU→escalate→process against running backends. Strip fills correctly at each tier, provenance banner correct, `lgu_id` carried through, agents extracted every anchor figure (340 / 87 / Nug-as / Alcoy). Zero console errors.
+
+---
+
 ## 2026-08-08 · Polish — A2 weather overlay, B2 stat consistency
 
 Acting on Rob's responses to `NOTES.txt`. Three resolved, three deferred to the ASEAN rework.

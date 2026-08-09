@@ -1,3 +1,4 @@
+import { WeatherGlyph } from '../shared/RoleGlyph'
 /* 7-day outlook — sits above the weather map, mirroring the old EMMA layout.
    Today's column is highlighted; rainfall drives the small bar under each day. */
 
@@ -7,7 +8,7 @@ export default function ForecastStrip({ forecast, location }) {
   return (
     <div className="forecast-strip">
       <div className="forecast-lead">
-        <div className="forecast-lead-icon">{forecast[0].icon}</div>
+        <WeatherGlyph condition={forecast[0].condition} size={26} className="forecast-lead-icon" />
         <div>
           <div className="forecast-lead-place">{location}</div>
           <div className="forecast-lead-cond">{forecast[0].condition}</div>
@@ -19,7 +20,7 @@ export default function ForecastStrip({ forecast, location }) {
         {forecast.map((d, i) => (
           <div key={d.day} className={`forecast-day ${i === 0 ? 'forecast-day-now' : ''}`}>
             <div className="forecast-day-label">{d.label}</div>
-            <div className="forecast-day-icon">{d.icon}</div>
+            <WeatherGlyph condition={d.condition} size={16} className="forecast-day-icon" />
             <div className="forecast-day-temps">
               <span className="forecast-hi">{d.high}°</span>
               <span className="forecast-lo">{d.low}°</span>

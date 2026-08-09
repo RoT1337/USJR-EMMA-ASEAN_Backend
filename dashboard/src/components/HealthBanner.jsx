@@ -16,7 +16,6 @@ export default function HealthBanner({ health, error }) {
         <span style={{
           width: 7, height: 7, borderRadius: '50%',
           background: 'var(--muted)',
-          animation: 'blink 1.2s ease infinite',
           flexShrink: 0,
         }} />
         <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: "'JetBrains Mono', monospace" }}>
@@ -28,7 +27,7 @@ export default function HealthBanner({ health, error }) {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{
+      <span className="health-dot-live" style={{
         width: 7, height: 7, borderRadius: '50%',
         background: 'var(--pass)', flexShrink: 0,
         boxShadow: '0 0 5px rgba(5,150,105,0.5)',

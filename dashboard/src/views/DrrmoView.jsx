@@ -93,7 +93,7 @@ export default function DrrmoView({ role, onSwitchRole, visited }) {
           <AgentPanel
             name={role.agent.name}
             tagline={role.agent.tagline}
-            icon={role.agent.icon}
+            roleId={role.id}
             accent={role.agent.accent}
             accentBg={role.agent.accentBg}
             confidence={agent.confidence}
@@ -119,7 +119,7 @@ export default function DrrmoView({ role, onSwitchRole, visited }) {
             value={s.value}
             unit={s.unit}
             sub={s.sub}
-            accent={s.accent}
+            tone={s.tone}
           />
         ))}
       </StatRow>

@@ -1,3 +1,4 @@
+import { RoleGlyph } from './RoleGlyph'
 /* AgentPanel — thin wrapper around AgentCard's styling.
    It reuses the same class names (.agent-card, .conf-bar-track, .field-row …) so
    EMMA-Warn / Care / Plan render in the identical visual language as the five
@@ -13,7 +14,7 @@ function confidenceColor(pct) {
 export default function AgentPanel({
   name,               // 'EMMA-Warn'
   tagline,            // 'The Sentinel'
-  icon,               // '🛡️'
+  roleId,             // which role's mark to show
   accent,             // agent accent, e.g. '#EA580C'
   accentBg,           // matching tint, e.g. '#FFF4EE'
   confidence,         // 0–100
@@ -35,7 +36,7 @@ export default function AgentPanel({
       {/* Header — mirrors AgentCard */}
       <div className="agent-card-header">
         <div className="agent-card-title-row">
-          <span className="agent-card-icon">{icon}</span>
+          <RoleGlyph roleId={roleId} size={15} className="agent-card-icon" style={{ color: accent }} />
           <div>
             <div className="agent-card-title" style={{ color: accent }}>{name}</div>
             <div className="agent-card-sub">{tagline}</div>

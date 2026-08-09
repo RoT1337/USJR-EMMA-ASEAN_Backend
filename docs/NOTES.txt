@@ -1,7 +1,7 @@
 ================================================================================
 EMMA — THINGS WORTH NOTING
 Collated 2026-08-07, after Phase 3 (all four views built)
-Updated  2026-08-08 with Rob's decisions — see STATUS on each item
+Updated  2026-08-10 after V1.2 (ASEAN queue, design pass, architecture diagram)
 Draft due Aug 8 · Finalize Aug 9 · Hard submit morning of Aug 10
 ================================================================================
 
@@ -10,18 +10,20 @@ decisions I could not make for you, C is known gaps, D is things that are fine
 but you should know about.
 
 --------------------------------------------------------------------------------
-STATUS AT A GLANCE (updated 2026-08-08, after Phase 4)
+STATUS AT A GLANCE (updated 2026-08-10, after V1.2)
 --------------------------------------------------------------------------------
   A1  Laravel localhost/127.0.0.1 ........ RESOLVED (re-verify before demo)
   A2  Weather overlay visibility .......... RESOLVED — dark basemap + clouds
                                             (scope direction reversed in Phase 4)
   A3  Pipeline vs 45s segment ............. ⚠ WORSE — now 29.9s. READ THIS ONE.
-  A4  Offline map fallback ................ PARTLY DONE — image captured, unwired
-                                            (needs re-capture, map changed)
+  A4  Offline map fallback ................ PARTLY DONE — captured + current,
+                                            still not auto-wired
   A5  Cross-border insight is not ......... LLM variance, see below
       guaranteed
-  A6  Pre-submitting does not survive ..... ⚠ NEW — breaks your A3 plan (a).
+  A6  Pre-submitting does not survive ..... ⚠ breaks your A3 plan (a).
       a role switch                         Use two browser windows.
+  A7  ASEAN view needs an escalation ...... the queue is empty unless a
+      before it has a NEW row               SITREP was submitted.
   B1  Confidence badge rule ............... RESOLVED — one rule, both tiers
   B2  "Aid Packages Ready = 174" .......... RESOLVED — disclosed + invariant added
   B3  HumanGate dead prop ................. RESOLVED — prop and CSS dropped
@@ -95,11 +97,20 @@ The division that actually works for the demo:
   wide scope  (Philippines / ASEAN) → the WEATHER is the story
   local scope (Alcoy)               → the PINS are the story, evacuation centres
                                       colour-coded by occupancy, red = 90%+ full
-Alcoy sits at zoom 10 rather than 11 to retain a little structure.
+CORRECTED IN PHASE 4 — the two paragraphs above described the map as it was
+BEFORE the direction was reversed. What actually ships:
 
-Suggested narration beat: open on Philippines with the cloud field, then hit
-"Alcoy" — the map flies in and the story narrows from the region to the barangay
-in one gesture. That is your whole local-to-regional narrative in three seconds.
+  · Alcoy is zoom 13, not 10. That frames the municipality itself — town label,
+    coast road, upland barangays — with the five pins spread rather than stacked
+  · The basemap is scope-aware: dark regionally so the weather glows, LIGHT
+    locally so the streets stay readable
+  · The overlay drops to 0.15 opacity at local scope, and the legend says
+    "local scope — pins carry the view"
+
+NARRATION BEAT, CORRECTED: open on ALCOY and walk OUTWARD — Alcoy, then
+Philippines, then ASEAN. The earlier note here said the opposite (open wide, fly
+in). That was top-down and fought the bottom-to-top story the whole demo is
+built on. Do not follow the old version if you skim this section.
 
 
 A3. THE PIPELINE NOW TAKES ~30 SECONDS              [⚠ GOT WORSE IN PHASE 4]
@@ -169,6 +180,28 @@ Related, same cause: a browser REFRESH resets everything — visited seats, the
 escalation payload, pipeline results. Do not hit F5 mid-demo.
 
 
+A7. THE ASEAN QUEUE IS EMPTY UNTIL A SITREP IS SUBMITTED           [BY DESIGN]
+--------------------------------------------------------------------------------
+V1.2 replaced the ASEAN textarea with an incoming SITREP queue. The Alcoy row
+only appears once the LGU has clicked Submit SITREP — before that the AHA Centre
+genuinely has not received anything, and showing the row early would fake the
+chain the whole demo exists to prove.
+
+Consequence for the demo: DO NOT open the ASEAN view cold and expect something to
+click. Walk LGU -> Submit SITREP first, or the queue shows only the two
+member-state rows (Viet Nam, Indonesia) and there is nothing to triage.
+
+If you need to demo the pipeline without the walk, Manual entry is still there —
+collapsed under the queue. It takes the same prefilled SITREP.
+
+Pipeline timing from the queue measured at 19.3-26.4s across runs, consistent
+with A3. Treat ~30s as the planning number; it varies with model latency.
+
+Since V1.2 final the idle state is no longer empty — the six agents render
+standing by beneath the queue, so the screen reads as "ready" rather than
+"unfinished" if it is ever on camera before you cut to the populated window.
+
+
 A5. THE CROSS-BORDER INSIGHT IS NOT GUARANTEED                          [NEW]
 --------------------------------------------------------------------------------
 On one run the Pattern agent surfaced "Typhoon systems affecting Cebu can track
@@ -194,9 +227,10 @@ map?" — Yes, that is exactly what CLAUDE.md meant. But you should not have to
 take it manually, and you should not take it on demo day when the wifi is the
 thing that just failed.
 
-DONE: captured while the tiles were confirmed live, at 2x for projector:
+DONE: captured while the tiles were confirmed live:
     dashboard/public/weather-map-fallback.png
-Philippines scope, clouds layer, dark basemap, all 5 evacuation pins in frame.
+Alcoy scope, clouds layer, all 5 evacuation pins in frame — matching what the
+view actually shows on load.
 
 You can use it two ways:
   (a) As a slide asset — drop it straight into the deck. Nothing to wire.
@@ -417,6 +451,43 @@ They copy .env.example to .env and refill it. Say this in the PR description or
 someone loses ten minutes.
 
 
+D6. SCREENSHOTS ARE GENERATED, NOT HAND-TAKEN                     [NEW IN V1.2]
+--------------------------------------------------------------------------------
+    cd dashboard
+    npm run dev          # one terminal
+    npm run capture      # another  ->  docs/screenshots/
+    npm run capture -- --2x     retina, for slides
+    npm run capture -- --full   full page instead of above-the-fold
+
+Six views: login, DRRMO, DSWD, LGU, ASEAN queue, architecture diagram.
+
+Two things worth knowing:
+  · It walks the escalation so the ASEAN queue has its inbound row, but it does
+    NOT run the pipeline — safe to re-run without spending agent calls
+  · It exits non-zero if any view logs a console error, so it doubles as a cheap
+    smoke test. If capture fails, something is broken, not just ugly
+
+Re-run it after any visual change. Stale screenshots in a deck are worse than
+none, because nobody notices they are stale.
+
+
+D7. THE DESIGN LANGUAGE HAS RULES NOW                             [NEW IN V1.2]
+--------------------------------------------------------------------------------
+If you or anyone else edits the UI, these are the constraints the pass applied.
+Breaking one will look wrong even if you cannot say why:
+
+  · NO EMOJI. Everything routes through lucide via src/components/shared/icons.js
+    and RoleGlyph.jsx. Emoji render differently per OS and would not match the
+    projector
+  · Figures, IDs, timestamps and ratios are monospace with tabular digits
+  · COLOUR ENCODES STATE, NEVER IDENTITY. A stat card is neutral unless its value
+    means something needs attention. Tones are computed from thresholds in
+    dataSource.js, not hand-assigned
+  · MOTION ENCODES STATE CHANGE. Nothing animates on an idle screen. The only
+    ambient exception allowed is a radar sweep on the weather map
+  · Everything lands under 500ms and respects prefers-reduced-motion
+
+
 D5. VERIFIED, NOT ASSUMED
 --------------------------------------------------------------------------------
 Everything below was checked in a real browser, not inferred:
@@ -433,21 +504,22 @@ Everything below was checked in a real browser, not inferred:
 
 
 ================================================================================
-WHAT IS LEFT  (after Phase 4)
+WHAT IS LEFT  (after V1.2)
 ================================================================================
 
-The ASEAN rework that was blocking B1 / B3 / C1 has happened — Phase 4 made the
-report arrive by escalation instead of being typed, and all three are cleared.
+V1.2 closed the ASEAN queue, the architecture diagram and the design pass.
+Items 2 and 3 of V1.2 were already done in the Phase 4 correction round.
 
-DECIDE THIS ONE — the only real risk left
-  A3  the demo path now takes 29.9s against a 45s segment. Pick (a) pre-submit,
-      (b) let me trim the SITREP, or (c) narrate over it. Measurements in A3.
-      I did not choose for you: trimming trades away the length that makes the
-      SITREP read as a real institutional document.
+DECIDE THIS ONE — still the only real risk
+  A3  the demo path takes ~26-30s against a 45s segment. You picked pre-submit,
+      but see A6: pre-submitting does not survive a role switch. Two browser
+      windows is the zero-risk answer.
 
 NO CODE NEEDED, JUST YOU
   A1  run window.EMMA.probe() before going on stage
   A5  do not script the cross-border line — it does not appear every run
+  A7  walk LGU -> Submit SITREP before showing ASEAN, or the queue has nothing
+      to triage
   C4  confirm the 0:30 "Mobile + Web overview" segment is covered by something
 
 SMALL AND OPTIONAL
@@ -456,14 +528,15 @@ SMALL AND OPTIONAL
   C2  responsive below 900px, only matters if you show a phone or tablet
 
 DEMO PATH AS IT NOW STANDS
-  Log in as DRRMO   → strip shows Field ● DRRMO ●, inbound from Brgy. Nug-as.
-                      Map opens on Alcoy at municipal zoom; toggle outward to
+  Log in as DRRMO   → chain shows Brgy ● DRRMO ●, inbound from Kap. M. Santos.
+                      Map opens on ALCOY at municipal zoom; toggle OUTWARD to
                       Philippines / ASEAN as the scope of the story widens.
-  Switch to DSWD    → inbound Hazard Advisory from J. Ramos · 3 duplicates found
+  Switch to DSWD    → inbound Hazard Advisory from James Avaceña · 3 duplicates
   Switch to LGU     → inbound Validated List · outbound SITREP card in the rail
-  Click ESCALATE    → lands on ASEAN, strip completes, SITREP prefilled with
-                      provenance. Nothing was typed.
-  Click Process     → 29.9s · six agents · Human Gate
+  Click SUBMIT SITREP → lands on ASEAN, relay tiers light, Alcoy row appears in
+                      the incoming queue marked NEW, tagged "via NDRRMC"
+  Click the NEW row → ~26s · six agents · Human Gate
+  Architecture      → localhost:5173/?view=architecture for the 0:15 segment
 
 
 ================================================================================

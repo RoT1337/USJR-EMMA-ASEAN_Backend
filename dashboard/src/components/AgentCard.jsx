@@ -1,10 +1,11 @@
+import { AgentGlyph } from './shared/RoleGlyph'
 const AGENT_META = {
-  intake:        { label: 'Intake',        sub: 'Language & Triage',    icon: '📋' },
-  vulnerability: { label: 'Vulnerability', sub: 'Population Risk',      icon: '🛡️' },
-  resource:      { label: 'Resource',      sub: 'Supply & Gaps',        icon: '📦' },
-  routing:       { label: 'Routing',       sub: 'Evacuation Paths',     icon: '🗺️' },
-  pattern:       { label: 'Pattern',       sub: 'Historical Context',   icon: '📊' },
-  handoff:       { label: 'Handoff',       sub: 'Final Recommendation', icon: '🎯' },
+  intake:        { label: 'Intake',        sub: 'Language & Triage' },
+  vulnerability: { label: 'Vulnerability', sub: 'Population Risk' },
+  resource:      { label: 'Resource',      sub: 'Supply & Gaps' },
+  routing:       { label: 'Routing',       sub: 'Evacuation Paths' },
+  pattern:       { label: 'Pattern',       sub: 'Historical Context' },
+  handoff:       { label: 'Handoff',       sub: 'Final Recommendation' },
 }
 
 const AGENT_ACCENT = {
@@ -134,6 +135,41 @@ function SkeletonCard({ agentKey }) {
   )
 }
 
+
+/* ────────────────────────────────────────────────────────────── */
+/* Idle variant — the pipeline before anything has arrived        */
+/*                                                                */
+/* Deliberately NOT the skeleton. A skeleton means "loading, wait" */
+/* and animates; this screen is idle, and the design rule is that  */
+/* nothing moves on an idle screen. This is a static standby card: */
+/* it shows the shape of what is about to happen without claiming  */
+/* anything is happening.                                          */
+/* ────────────────────────────────────────────────────────────── */
+
+function IdleCard({ agentKey }) {
+  const meta = AGENT_META[agentKey]
+  const accent = AGENT_ACCENT[agentKey]
+
+  return (
+    <div className="agent-card agent-card-idle" style={{ borderLeftColor: accent.border }}>
+      <div className="agent-card-header">
+        <div className="agent-card-title-row">
+          <AgentGlyph agentKey={agentKey} size={15} className="agent-card-icon" />
+          <div>
+            <div className="agent-card-title">{meta.label}</div>
+            <div className="agent-card-sub">{meta.sub}</div>
+          </div>
+        </div>
+        <span className="agent-card-standby">STANDBY</span>
+      </div>
+
+      <div className="conf-bar-track">
+        <div className="conf-bar-fill" style={{ width: 0 }} />
+      </div>
+    </div>
+  )
+}
+
 /* ────────────────────────────────────────────────────────────── */
 /* Populated card — final state                                   */
 /* ────────────────────────────────────────────────────────────── */
@@ -215,10 +251,15 @@ function AgentFields({ agentKey, data }) {
   return null
 }
 
-export default function AgentCard({ agentKey, data, animationDelay = 0 }) {
+export default function AgentCard({ agentKey, data, animationDelay = 0, idle = false }) {
   const meta = AGENT_META[agentKey]
   const accent = AGENT_ACCENT[agentKey]
   const pct = data ? Math.round((data.confidence ?? 0) * 100) : 0
+
+  // Standing by — nothing submitted yet. Static, no animation.
+  if (idle) {
+    return <IdleCard agentKey={agentKey} />
+  }
 
   // Skeleton while loading
   if (!data) {
@@ -232,14 +273,14 @@ export default function AgentCard({ agentKey, data, animationDelay = 0 }) {
       style={{
         borderLeftColor: accent.border,
         background: accent.bg,
-        animation: `fadeSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both`,
+        animation: `fadeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both`,
         animationDelay: `${animationDelay}ms`,
       }}
     >
       {/* Header */}
       <div className="agent-card-header">
         <div className="agent-card-title-row">
-          <span className="agent-card-icon">{meta.icon}</span>
+          <AgentGlyph agentKey={agentKey} size={15} className="agent-card-icon" style={{ color: accent.badge }} />
           <div>
             <div className="agent-card-title" style={{ color: accent.badge }}>
               {meta.label}

@@ -1,14 +1,15 @@
+import { AgentGlyph } from './shared/RoleGlyph'
 import { useEffect, useState } from 'react'
 
 const AGENTS = ['intake', 'vulnerability', 'resource', 'routing', 'pattern', 'handoff']
 
 const AGENT_META = {
-  intake:        { label: 'Intake',        icon: '📋' },
-  vulnerability: { label: 'Vulnerability', icon: '🛡️' },
-  resource:      { label: 'Resource',      icon: '📦' },
-  routing:       { label: 'Routing',       icon: '🗺️' },
-  pattern:       { label: 'Pattern',       icon: '📊' },
-  handoff:       { label: 'Handoff',       icon: '🎯' },
+  intake:        { label: 'Intake' },
+  vulnerability: { label: 'Vulnerability' },
+  resource:      { label: 'Resource' },
+  routing:       { label: 'Routing' },
+  pattern:       { label: 'Pattern' },
+  handoff:       { label: 'Handoff' },
 }
 
 const AGENT_ACCENT = {
@@ -117,7 +118,7 @@ export default function AgentNav({ outputs }) {
             onClick={() => scrollTo(key)}
           >
             <div className="agent-nav-top">
-              <span className="agent-nav-icon">{meta.icon}</span>
+              <AgentGlyph agentKey={key} size={13} className="agent-nav-icon" />
               <span className="agent-nav-label">{meta.label}</span>
               <span className="agent-nav-pct" style={{ color: data ? accent.badge : undefined }}>
                 {data ? `${pct}%` : '—'}

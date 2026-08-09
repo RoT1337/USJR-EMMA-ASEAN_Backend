@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { UI_ICONS } from './shared/icons'
 
 /* No `handoff` prop: the Handoff agent card renders directly above this gate and
    already shows the same action and reasoning in full. Restating it here would
@@ -42,21 +43,21 @@ export default function HumanGate({ onDecide, isLogging }) {
           disabled={isLogging}
           className="gate-btn gate-btn-approve"
         >
-          <span>✓</span> Approve
+          <UI_ICONS.check size={14} strokeWidth={2.5} /> Approve
         </button>
         <button
           onClick={() => submit('modified')}
           disabled={isLogging}
           className="gate-btn gate-btn-modify"
         >
-          <span>✎</span> Modify
+          <UI_ICONS.edit size={14} strokeWidth={2.5} /> Modify
         </button>
         <button
           onClick={() => submit('rejected')}
           disabled={isLogging}
           className="gate-btn gate-btn-reject"
         >
-          <span>✕</span> Reject
+          <UI_ICONS.reject size={14} strokeWidth={2.5} /> Reject
         </button>
       </div>
     </div>

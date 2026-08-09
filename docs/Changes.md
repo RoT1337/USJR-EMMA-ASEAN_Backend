@@ -4,6 +4,85 @@ Running log of build changes. Newest entry at the top.
 
 ---
 
+## 2026-08-10 · V1.2 final — jitter fix, map pin corrections
+
+**1. Jittery agent-loading animation (ASEAN)** — three causes, all real:
+
+- **Two competing `animation` declarations on the same wrapper.** `.pipeline-step-animate` set `fadeSlideIn` while `.skeleton-reveal` / `.card-reveal` set another. Worse, that second class **flipped from skeleton-reveal to card-reveal the moment results arrived, restarting the animation mid-flight** — six cards each snapping back to their start frame. This was the visible jump.
+- **`skeleton-border-pulse` animated `box-shadow` on all six cards at once.** Nothing composites box-shadow, so every frame forced a full repaint of six large cards. Removed; the per-agent skeleton animations already convey "working". `glow-pulse` moved from box-shadow to opacity.
+- **Stagger was declared twice** — CSS `nth-child` delays *and* an inline `animationDelay`, both encoding the same 250ms ladder. Dropped the CSS ladder; inline is authoritative.
+
+Also softened the entrance curve — `cubic-bezier(0.34, 1.56, 0.64, 1)` overshoots by design and read as a bounce on top of the restart. Now `(0.16, 1, 0.3, 1)`, and `translate3d` to keep it on the compositor.
+
+Audited during a live run: **zero repaint-bound animations, zero elements carrying more than one animation.**
+
+**2. Alcoy Municipal Gymnasium pin was in the sea.** Its longitude put it east of the coastline. Moved to `9.7106, 123.5040` beside the town centre. Alcoy Central School, Guiwang and Pugalo were also drifting toward the water and were pulled inland.
+
+**3. Four more evacuation centres** — Atabay, Daan-Lungsod, Pasol, San Agustin. Nine pins now, one per barangay that has a risk row, so the map matches the barangay table.
+
+All four new centres are `OPEN` with `occupied: 0`, deliberately: active occupancy has to keep summing to exactly 340 or `validateMockData()` fails. **All invariants still pass** — 9 centres, 3 active, 340 occupied against 700 capacity.
+
+Verified by rendering rather than by reasoning: all nine pins on land. Screenshots regenerated.
+
+---
+
+## 2026-08-10 · V1.2 final — screenshot-review fixes
+
+Four items from the review. Nothing else touched; the build was already verified and unrequested change was the main risk.
+
+**1. LGU contradicted itself on the document name** `[required]`
+EMMA-Plan said *"**PDRA** draft generated…"* and *"Review **PDRA**…"* while the button said Submit SITREP and the outbound panel said SITREP. A PDRA is a *pre*-disaster instrument; this scenario is mid-event. Both are real NDRRMC documents, which is why the mismatch would have been caught.
+
+Fixed **at the source**, not as a string patch: new `SITREP_LABEL` constant in `mockData.js`, and the agent copy interpolates it. The button, the outbound panel and the agent panel can no longer disagree. Also corrected "DSWD" → "MSWD" in that headline (municipal office). Verified: zero "PDRA" in rendered text.
+
+**2. ASEAN idle state was ~55% dead space** `[optional]`
+Replaced the flat `TRIAGE RUNS` chip row with the **six agents rendered standing by**, via a new `idle` variant on the existing `AgentCard` — not a second component.
+
+Deliberately **not** the skeleton: a skeleton means "loading, wait" and animates, and the design rule is that nothing moves on an idle screen. The idle card is static, muted, marked `STANDBY`. Verified programmatically that all six have `animation-name: none`.
+
+**3. ASEAN had no sidebar** `[decision]`
+Added, reusing the existing `Sidebar` with a nav tree on the asean role — no new component, no new CSS beyond the flex wrapper. Without it the climax screen read as a different application rather than a different seat.
+
+Shown while idle only; once the pipeline runs `AgentNav` takes the left rail, because at that point the agents *are* the relevant navigation. That also makes the view consistent with itself, which it previously wasn't.
+
+**4. Map pins were small against a large grey sea** `[low priority]`
+Only the cheapest change the doc allowed: pins 12px → 14px with a heavier ring. Nothing else on that screen touched.
+
+**Verified** — PDRA gone; sidebar present; 6 idle cards, 0 animating; idle → processing layout switch OK; **full live run 19.3s**, six agents, Human Gate; lint clean, build passes, zero console errors. Screenshots regenerated.
+
+---
+
+## 2026-08-10 · V1.2 — ASEAN queue, design pass, architecture diagram
+
+**Items 2 and 3 were already done** in the Phase 4 correction round (LGU rename + relay provenance, grouped escalation strip). Verified in place, no work needed.
+
+### 1. ASEAN SITREP queue `[priority]`
+The textarea was the wrong affordance — an AHA Centre coordinator receives reports from member-state NDMOs, they do not author prose about another country.
+
+- New `SitrepQueue` is the hero of `AseanView`, matching the spec sketch
+- **`via NDRRMC` is a column, not a caption** — the AADMER pathway stated as data. Derived from `RELAY_PATH` so the row cannot disagree with the provenance banner
+- The Alcoy row appears **only after** the municipality submits; browsing to the ASEAN view directly shows just the two member-state rows. Faking the inbound row would fake the chain
+- Viet Nam (VNDMA) and Indonesia (BNPB) rows are decorative history, correct NDMO acronyms
+- **Manual entry demoted, not deleted** — collapsed below the queue, labelled "phone-in report · non-integrated member state"
+- Pipeline untouched: clicking a row calls the same `handleSubmit` the form always called. **Verified live — queue click to Human Gate in 26.4s, six agents populated**
+
+### 4. Architecture diagram
+`?view=architecture` — a standalone route, not a dashboard, so it can be projected or screenshotted. Shows the five tiers (relay tiers hatched), the six-stage pipeline into the Human Gate, and both relay agents with what they actually do. Sizes to content so it drops into a slide without dead space.
+
+### 5. Design pass — operations software
+- **Emoji eliminated.** `lucide-react`, all iconography through one module. Verified: zero emoji in rendered text across all six screens
+- **Figures monospace with tabular digits** — stat values, IDs, timestamps, ratios
+- **Colour encodes state only.** Decorative per-card accents removed; tones now computed from thresholds (`duplicates > 0`, occupancy ≥90%, supplies ≤65%) using the same bands as the occupancy bars and map pins
+- **Motion audited** — removed the infinite pulse on Submit SITREP; health dot breathes only while connected; added count-up on load (420ms, ease-out, respects `prefers-reduced-motion`) and a one-shot pulse when an escalation tier completes
+- Density: tighter card and table padding, 6px radius
+
+### Screenshots
+`npm run capture` → `docs/screenshots/` (all six views, `--2x` and `--full` flags). Deliberately does not run the pipeline, so it is safe to re-run. See `docs/screenshots/README.md`.
+
+**Verified** — lint clean (zero errors, zero warnings), build passes, zero console errors on every view, queue click drives the live pipeline end to end.
+
+---
+
 ## 2026-08-08 · Session memory across role switches
 
 Rob's polish note: *"When switching to a different role, maybe keep highlighted what was previously opened?"* — applied in three places, because it mattered in all of them.

@@ -1,3 +1,5 @@
+import { RoleGlyph } from './RoleGlyph'
+
 /* RoleHeader — shared app header for the three local dashboards.
    The role chip doubles as the role switcher: clicking it returns to login. */
 
@@ -31,7 +33,7 @@ export function RoleChip({ role, onSwitchRole }) {
       title="Switch role"
       style={{ borderColor: role.agent.accent, background: role.agent.accentBg }}
     >
-      <span className="role-chip-icon">{role.agent.icon}</span>
+      <RoleGlyph roleId={role.id} className="role-chip-icon" style={{ color: role.agent.accent }} />
       <span className="role-chip-body">
         <span className="role-chip-name" style={{ color: role.agent.accent }}>{role.name}</span>
         <span className="role-chip-user">{role.user}</span>

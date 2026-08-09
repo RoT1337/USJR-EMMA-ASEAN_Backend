@@ -100,7 +100,9 @@ export default function AgentPipeline({ outputs, isProcessing = false }) {
             <div
               key={agent.key}
               id={`doc-section-${agent.key}`}
-              className={`pipeline-step-animate ${isSkeleton ? 'skeleton-reveal' : 'card-reveal'}`}
+              /* Stable class: swapping it when results land restarted the
+                 animation and made the whole pipeline jump. */
+              className="pipeline-step-animate"
               style={{ animationDelay: `${animationDelay}ms` }}
             >
               <div className="pipeline-step-number">

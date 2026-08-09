@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ROLES, ROLE_MAP } from '../roles'
+import { RoleGlyph } from './shared/RoleGlyph'
 
 /* `initialRole` returns you to the seat you had open rather than resetting to
    DRRMO, and `visited` marks the seats already seen this session — so switching
@@ -72,7 +73,7 @@ export default function LoginScreen({ onLogin, visited = [], initialRole = null 
                 style={active ? { borderColor: r.agent.accent, background: r.agent.accentBg } : undefined}
                 onClick={() => pickRole(r.id)}
               >
-                <span className="login-role-icon">{r.agent.icon}</span>
+                <RoleGlyph roleId={r.id} size={15} className="login-role-icon" style={{ color: r.agent.accent }} />
                 <span className="login-role-body">
                   <span className="login-role-name">
                     {r.name}

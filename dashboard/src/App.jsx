@@ -5,6 +5,7 @@ import DrrmoView from './views/DrrmoView'
 import DswdView from './views/DswdView'
 import LguView from './views/LguView'
 import AseanView from './views/AseanView'
+import ArchitectureView from './views/ArchitectureView'
 
 const VIEWS = {
   drrmo: DrrmoView,
@@ -12,6 +13,12 @@ const VIEWS = {
   lgu:   LguView,
   asean: AseanView,
 }
+
+/* ?view=architecture renders the standalone diagram for the 0:15 segment. Kept
+   out of the role router because it is a presentation asset, not a seat. */
+const isArchitecture = () =>
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).get('view') === 'architecture'
 
 function App() {
   /* null = signed out. Role state is the router — no URL routing needed for the demo. */
@@ -32,6 +39,8 @@ function App() {
     setRoleId(id)
     setVisited(prev => (prev.includes(id) ? prev : [...prev, id]))
   }
+
+  if (isArchitecture()) return <ArchitectureView />
 
   if (!roleId) {
     return <LoginScreen onLogin={openRole} visited={visited} initialRole={lastRole} />

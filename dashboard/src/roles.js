@@ -19,7 +19,6 @@ export const ROLES = [
     agent: {
       name: 'EMMA-Warn',
       tagline: 'The Sentinel',
-      icon: '🛡️',
       accent: '#EA580C',
       accentBg: '#FFF4EE',
     },
@@ -49,7 +48,6 @@ export const ROLES = [
     agent: {
       name: 'EMMA-Care',
       tagline: 'The Welfare Manager',
-      icon: '📦',
       accent: '#7C3AED',
       accentBg: '#F5F3FF',
     },
@@ -83,7 +81,6 @@ export const ROLES = [
     agent: {
       name: 'EMMA-Plan',
       tagline: 'The Planner',
-      icon: '🗺️',
       accent: '#059669',
       accentBg: '#ECFDF5',
     },
@@ -115,11 +112,23 @@ export const ROLES = [
     agent: {
       name: '5-Agent Pipeline',
       tagline: 'Live LangGraph Service',
-      icon: '🎯',
       accent: '#DC2626',
       accentBg: '#FEF2F2',
     },
-    /* No nav tree — this view uses the live AgentNav sidebar instead. */
+    activeNav: 'Incident Queue',
+    /* Cosmetic, like the other three. Without it the AHA Centre read as a
+       different application rather than a different seat. Only shown while idle:
+       once the pipeline runs, AgentNav takes the left rail because the agents
+       are then the relevant navigation. */
+    nav: [
+      {
+        label: 'AADMER Operations',
+        items: ['Incident Queue', 'Member States', 'Deployments', 'Reports'],
+      },
+      { label: 'Regional Pattern' },
+      { label: 'Resource Registry' },
+      { label: 'Audit Trail' },
+    ],
   },
 ]
 

@@ -8,12 +8,14 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "demo:record": "node demo-record.js"
+    "demo:record": "node demo-record.js",
+    "capture": "node capture.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.1",
     "axios": "^1.18.0",
     "leaflet": "^1.9.4",
+    "lucide-react": "^1.31.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-leaflet": "^5.0.0",

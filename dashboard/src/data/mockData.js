@@ -33,6 +33,10 @@ export const SCENARIO = {
   center: { lat: 9.7167, lng: 123.5167 },   // Alcoy poblacion
 }
 
+/* The artifact the LGU tier produces. One constant so the agent copy, the
+   button, and the outbound panel can never disagree about what is being filed. */
+export const SITREP_LABEL = 'SITREP'
+
 /* Vulnerability figures stay constant everywhere they appear. */
 export const VULNERABILITY = {
   pregnant: 2,
@@ -87,13 +91,13 @@ export const advisories = [
 
 /* 7-day outlook — renders as the strip above the weather map. */
 export const forecast = [
-  { day: 'Thu', label: 'Today', condition: 'Typhoon',       icon: '🌀', high: 27, low: 24, rainfall: 148 },
-  { day: 'Fri', label: 'Fri',   condition: 'Heavy rain',    icon: '🌧️', high: 28, low: 24, rainfall: 92 },
-  { day: 'Sat', label: 'Sat',   condition: 'Rain showers',  icon: '🌦️', high: 29, low: 24, rainfall: 41 },
-  { day: 'Sun', label: 'Sun',   condition: 'Cloudy',        icon: '☁️', high: 30, low: 25, rainfall: 12 },
-  { day: 'Mon', label: 'Mon',   condition: 'Partly cloudy', icon: '⛅', high: 31, low: 25, rainfall: 4 },
-  { day: 'Tue', label: 'Tue',   condition: 'Partly cloudy', icon: '⛅', high: 31, low: 25, rainfall: 2 },
-  { day: 'Wed', label: 'Wed',   condition: 'Fair',          icon: '☀️', high: 32, low: 26, rainfall: 0 },
+  { day: 'Thu', label: 'Today', condition: 'Typhoon', high: 27, low: 24, rainfall: 148 },
+  { day: 'Fri', label: 'Fri',   condition: 'Heavy rain', high: 28, low: 24, rainfall: 92 },
+  { day: 'Sat', label: 'Sat',   condition: 'Rain showers', high: 29, low: 24, rainfall: 41 },
+  { day: 'Sun', label: 'Sun',   condition: 'Cloudy', high: 30, low: 25, rainfall: 12 },
+  { day: 'Mon', label: 'Mon',   condition: 'Partly cloudy', high: 31, low: 25, rainfall: 4 },
+  { day: 'Tue', label: 'Tue',   condition: 'Partly cloudy', high: 31, low: 25, rainfall: 2 },
+  { day: 'Wed', label: 'Wed',   condition: 'Fair', high: 32, low: 26, rainfall: 0 },
 ]
 
 /* ═════════════════════════════════════════════════════════════════════════════
@@ -152,11 +156,15 @@ export const inventory = [
 /* Occupancy across ACTIVE centres sums to SCENARIO.residentsAffected (340).
    Coordinates sit around Alcoy so the Leaflet pins land correctly. */
 export const evacuationCenters = [
-  { id: 'ec-nugas-es',  name: 'Nug-as Elementary School',   barangay: 'Nug-as',    address: 'Sitio Poblacion, Nug-as',    capacity: 180, occupied: 164, status: 'ACTIVE', contact: 'Elena Bacalso',   phone: '0917 812 4455', lat: 9.7024, lng: 123.4881 },
-  { id: 'ec-alcoy-cs',  name: 'Alcoy Central School',       barangay: 'Poblacion', address: 'Rizal St., Poblacion',       capacity: 220, occupied: 121, status: 'ACTIVE', contact: 'Ramon Villaflor', phone: '0918 334 7720', lat: 9.7133, lng: 123.5089 },
-  { id: 'ec-alcoy-gym', name: 'Alcoy Municipal Gymnasium',  barangay: 'Poblacion', address: 'Municipal Compound',         capacity: 300, occupied:  55, status: 'ACTIVE', contact: 'Grace Ytang',     phone: '0920 551 9012', lat: 9.7159, lng: 123.5142 },
-  { id: 'ec-guiwang',   name: 'Guiwang Barangay Hall',      barangay: 'Guiwang',   address: 'Guiwang proper',             capacity:  90, occupied:   0, status: 'OPEN',   contact: 'Nestor Caballes', phone: '0927 118 6633', lat: 9.7361, lng: 123.5083 },
-  { id: 'ec-pugalo',    name: 'Pugalo Covered Court',       barangay: 'Pugalo',    address: 'Purok 3, Pugalo',            capacity: 120, occupied:   0, status: 'OPEN',   contact: 'Lita Suico',      phone: '0915 447 2288', lat: 9.6928, lng: 123.5006 },
+  { id: 'ec-nugas-es',  name: 'Nug-as Elementary School',   barangay: 'Nug-as',       address: 'Sitio Poblacion, Nug-as',  capacity: 180, occupied: 164, status: 'ACTIVE', contact: 'Elena Bacalso',   phone: '0917 812 4455', lat: 9.7024, lng: 123.4881 },
+  { id: 'ec-alcoy-cs',  name: 'Alcoy Central School',       barangay: 'Poblacion',    address: 'Rizal St., Poblacion',     capacity: 220, occupied: 121, status: 'ACTIVE', contact: 'Ramon Villaflor', phone: '0918 334 7720', lat: 9.7128, lng: 123.5052 },
+  { id: 'ec-alcoy-gym', name: 'Alcoy Municipal Gymnasium',  barangay: 'Poblacion',    address: 'Municipal Compound',       capacity: 300, occupied:  55, status: 'ACTIVE', contact: 'Grace Ytang',     phone: '0920 551 9012', lat: 9.7106, lng: 123.5040 },
+  { id: 'ec-guiwang',   name: 'Guiwang Barangay Hall',      barangay: 'Guiwang',      address: 'Guiwang proper',           capacity:  90, occupied:   0, status: 'OPEN',   contact: 'Nestor Caballes', phone: '0927 118 6633', lat: 9.7318, lng: 123.5024 },
+  { id: 'ec-pugalo',    name: 'Pugalo Covered Court',       barangay: 'Pugalo',       address: 'Purok 3, Pugalo',          capacity: 120, occupied:   0, status: 'OPEN',   contact: 'Lita Suico',      phone: '0915 447 2288', lat: 9.6934, lng: 123.4972 },
+  { id: 'ec-atabay',    name: 'Atabay Elementary School',   barangay: 'Atabay',       address: 'Atabay proper',            capacity: 140, occupied:   0, status: 'OPEN',   contact: 'Perla Cabatingan', phone: '0916 220 8891', lat: 9.7212, lng: 123.4948 },
+  { id: 'ec-daanlungsod', name: 'Daan-Lungsod Barangay Hall', barangay: 'Daan-Lungsod', address: 'Daan-Lungsod proper',   capacity: 110, occupied:   0, status: 'OPEN',   contact: 'Ismael Rosales',  phone: '0919 663 1174', lat: 9.6992, lng: 123.4934 },
+  { id: 'ec-pasol',     name: 'Pasol Multi-Purpose Hall',   barangay: 'Pasol',        address: 'Purok 1, Pasol',           capacity:  95, occupied:   0, status: 'OPEN',   contact: 'Dolores Ceniza',  phone: '0926 705 3320', lat: 9.6872, lng: 123.4996 },
+  { id: 'ec-sanagustin', name: 'San Agustin Covered Court', barangay: 'San Agustin',  address: 'San Agustin proper',       capacity:  85, occupied:   0, status: 'OPEN',   contact: 'Ric Alcoseba',    phone: '0921 884 5567', lat: 9.7332, lng: 123.4902 },
 ]
 
 export const fundRequests = [
@@ -242,13 +250,18 @@ export const agentAssessments = {
   },
   lgu: {
     confidence: 84,
-    headline: 'PDRA draft generated from DRRMO and DSWD inputs. Ready for review.',
+    /* SITREP, not PDRA. A PDRA is a PRE-disaster instrument that justifies
+       pre-emptive evacuation; this scenario is mid-event — flooding underway,
+       road already cut. Both are real NDRRMC documents, which is exactly why a
+       Philippine judge would catch the mismatch against the Submit SITREP button
+       and the outbound panel. Named from SITREP_LABEL so it cannot drift again. */
+    headline: `${SITREP_LABEL} draft generated from DRRMO and MSWD inputs. Ready for review.`,
     detail: `Consolidated ${DERIVED.totalOccupied} evacuees across ${DERIVED.activeCenterCount} active centers against a combined capacity of ${DERIVED.totalCapacity}. ${DERIVED.pendingApprovals} fund requests await your approval, including the prenatal kit procurement escalated by EMMA-Care.`,
     fields: [
       { label: 'Occupancy', value: `${DERIVED.totalOccupied} / ${DERIVED.totalCapacity} across ${DERIVED.activeCenterCount} active centers` },
       { label: 'Pending',   value: `${DERIVED.pendingApprovals} fund requests · ${peso(DERIVED.pendingAmount)}` },
       { label: 'Inter-LGU', value: coordinatingLGUs.map(l => l.name).join(' · ') },
-      { label: 'Action',    value: 'Review PDRA and release QRF augmentation', wide: true },
+      { label: 'Action',    value: `Review ${SITREP_LABEL} and release QRF augmentation`, wide: true },
     ],
   },
 }

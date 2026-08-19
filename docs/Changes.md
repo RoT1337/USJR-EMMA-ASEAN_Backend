@@ -4,6 +4,67 @@ Running log of build changes. Newest entry at the top.
 
 ---
 
+## 2026-08-10 · V1.3b — mobile reads as a phone, not a prototype viewer
+
+The demo chrome was breaking the illusion: an app header and an `01 02 03` screen
+switcher sat above the handset, so it read as a viewer with a phone in it.
+
+- **All outer chrome removed.** `ScreenSwitcher` deleted, `.app-bar` gone. The page
+  renders the phone alone, centred on a dark radial ground.
+- **Navigation moved inside the device.** New in-phone `Drawer` — slide-out from the
+  left with a scrim, opened by the hamburger the reference already showed on Home.
+  It lists all five screens and carries the signed-in resident (Rosalinda Cabahug,
+  `FAM-0412`), so the drawer itself reinforces the cross-reference.
+- **Back chevrons wired.** They were decorative on Evacuation, Family and Volunteer;
+  they now return to Home. Chat had no back control in the reference at all — a
+  prototype needs one, so it gained a subtle chevron before the avatar.
+- Landing screen is now **Home**, since that is where an app opens. Chat is one tap
+  away in the drawer.
+
+The drawer is `position: absolute` inside `.phone-screen`, which already had
+`overflow: hidden` and a 35px radius — verified it clips to the rounded corners
+rather than escaping the bezel.
+
+`record.mjs` updated to drive the drawer instead of the removed switcher, so the
+video still works if wanted. **Not re-recorded** — Rob asked for the phone feel,
+not another take.
+
+**Verified** — zero inert buttons on all five screens, drawer opens/navigates/closes,
+every back chevron returns Home, zero console errors, dashboard untouched.
+
+---
+
+## 2026-08-10 · V1.3 — mobile companion, all five screens + tour video
+
+New **`mobile/`** project, completely independent: own `package.json`, own `node_modules`, port 5174 with `strictPort`, nothing imported from `dashboard/`. `git status` confirms nothing outside `mobile/` moved.
+
+**All five reference screens built**, matching `docs/screenshots/mobile_reference.png`, re-skinned from the mockups' original province to Alcoy, Cebu.
+
+| # | Screen | Interactive |
+|---|---|---|
+| 01 | Chat with EMMA | scripted exchange, quick-report chips, CALL state |
+| 02 | Vulnerable Groups | accessibility filters, centre picker, route info |
+| 03 | Citizen Home Hub | routes into Family Tracking and Volunteer Hub |
+| 04 | Family Tracking | member selection drives map + card, working zoom |
+| 05 | Volunteer Hub | tabs, search, cycling filters, expandable detail |
+
+**Video** — `npm run record` → `recordings/*.webm`, ~45s, **phone only, no dashboard**. Demo chrome is hidden during capture so the frame is the handset alone on a dark ground, centred, ready to drop into a slide. It shows that EMMA reaches the people on the ground, which is what makes the bottom-to-top chain credible.
+
+⚠ Playwright outputs `.webm`. Browsers and Google Slides play it; **PowerPoint generally does not**. `ffmpeg` is not installed here, so convert before the deck is final if PowerPoint is the target.
+
+**Cross-reference held throughout.** The chat exchange **is** dashboard incident `INC-2044`; the patient is Rosalinda Cabahug, `FAM-0412` in the DSWD registry and one of the Vulnerability agent's two Tier 1 pregnant women. Family Tracking is her household — Liam is the same family ID, and Nena is offline in Sitio Cansuje, where the landslide cut the road. Evacuation capacities match the LGU table exactly (Nug-as 164/180).
+
+**Three things caught by measuring rather than eyeballing**
+- The route map was **flex-shrunk** from 158px to 91px, clipping the "You" marker. Children of a scrolling flex column shrink before the column scrolls — fixed with `flex-shrink: 0`.
+- Accessibility filters worked but looked dead: Nug-as carries all three tags, so every filter re-selected it. Added "Showing N of 3 centres" and made the picker actually pick.
+- An audit of every button found **9 inert ones** across screens 2, 4 and 5. All now do something real — map zoom actually zooms, task details expand, filter selects cycle. Re-verified: zero inert buttons on all five screens.
+
+`CALL` deliberately does **not** fire a `tel:` link; an OS dialer prompt mid-presentation would be the worst possible outcome. Volunteer filters cycle rather than opening a native select, which would render outside the phone frame and break the illusion.
+
+**Verified** — 5174 with no 5173 conflict, dashboard untouched, zero inert buttons, zero console errors on all five screens, zero occurrences of the mockups' original place names.
+
+---
+
 ## 2026-08-10 · V1.2 final — jitter fix, map pin corrections
 
 **1. Jittery agent-loading animation (ASEAN)** — three causes, all real:
